@@ -18,3 +18,7 @@ logs/
 # beside it.
 /.plugins/
 /.opencode-skills/
+
+supabase/.temp/
+*.backup-*
+*.backup
