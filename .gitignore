@@ -22,3 +22,7 @@ logs/
 supabase/.temp/
 *.backup-*
 *.backup
+
+supabase/.temp/
+*.backup-*
+*.backup
