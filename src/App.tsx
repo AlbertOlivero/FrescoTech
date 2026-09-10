@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import CatalogSection from "@/components/catalog/CatalogSection";
 import StatusLookupSection from "@/components/maintenance/StatusLookupSection";
 import { BUSINESS, ZONES } from "@/config/business";
@@ -18,7 +18,7 @@ type NexterPublicProduct = {
   stock: number | null;
 };
 
-// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type ServiceType = "installation" | "maintenance" | null;
 type Step = 1 | 2 | 3;
@@ -54,14 +54,14 @@ interface QuoteResult {
   materials: string[];
 }
 
-// â”€â”€â”€ Pricing Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Pricing Logic ────────────────────────────────────────────────────────────
 
 const BTU_MATERIALS: Record<string, [number, number]> = {
   "9000": [4200, 5800],
   "12000": [5200, 7000],
   "18000": [7000, 9500],
   "24000": [9500, 13000],
-  "nosÃ©": [5200, 13000],
+  "nosé": [5200, 13000],
 };
 
 const DISTANCE_SURCHARGE: Record<string, [number, number]> = {
@@ -75,7 +75,7 @@ const AC_LABOR: Record<string, [number, number]> = {
   "Ventana": [2800, 3800],
   "Inverter": [4000, 5500],
   "Central": [7500, 12000],
-  "No sÃ©": [3500, 12000],
+  "No sé": [3500, 12000],
 };
 
 const MAINT_BASE: [number, number] = [1500, 2200];
@@ -83,9 +83,9 @@ const MAINT_SYMPTOM_EXTRA: [number, number] = [600, 1800];
 
 function calcInstallQuote(data: InstallData): QuoteResult {
   const qty = Math.max(1, data.quantity);
-  const btuRange = BTU_MATERIALS[data.btu] ?? BTU_MATERIALS["nosÃ©"];
+  const btuRange = BTU_MATERIALS[data.btu] ?? BTU_MATERIALS["nosé"];
   const distRange = DISTANCE_SURCHARGE[data.distance] ?? [0, 0];
-  const laborRange = AC_LABOR[data.acType] ?? AC_LABOR["No sÃ©"];
+  const laborRange = AC_LABOR[data.acType] ?? AC_LABOR["No sé"];
 
   const matMin = (btuRange[0] + distRange[0]) * qty;
   const matMax = (btuRange[1] + distRange[1]) * qty;
@@ -93,18 +93,18 @@ function calcInstallQuote(data: InstallData): QuoteResult {
   const labMax = laborRange[1] * qty;
 
   const mats: string[] = [];
-  if (data.btu !== "nosÃ©") {
-    if (parseInt(data.btu) <= 12000) mats.push("TuberÃ­a de cobre 1/4\" y 3/8\"");
-    else mats.push("TuberÃ­a de cobre 3/8\" y 5/8\"");
+  if (data.btu !== "nosé") {
+    if (parseInt(data.btu) <= 12000) mats.push("Tubería de cobre 1/4\" y 3/8\"");
+    else mats.push("Tubería de cobre 3/8\" y 5/8\"");
   } else {
-    mats.push("TuberÃ­a de cobre (calibre segÃºn unidad)");
+    mats.push("Tubería de cobre (calibre según unidad)");
   }
-  mats.push("Cable elÃ©ctrico calibre 12 AWG");
+  mats.push("Cable eléctrico calibre 12 AWG");
   mats.push("Gas refrigerante R-410A");
   mats.push("Soportes y herrajes de montaje");
-  mats.push("Breaker termomagnÃ©tico");
-  if (data.distance === "mas6") mats.push("ExtensiÃ³n de tuberÃ­a adicional");
-  mats.push("Canaleta plÃ¡stica de acabado");
+  mats.push("Breaker termomagnético");
+  if (data.distance === "mas6") mats.push("Extensión de tubería adicional");
+  mats.push("Canaleta plástica de acabado");
 
   return { materialsMin: matMin, materialsMax: matMax, laborMin: labMin, laborMax: labMax, materials: mats };
 }
@@ -118,12 +118,12 @@ function calcMaintQuote(data: MaintData): QuoteResult {
   const matMax = 1200 * qty;
 
   const mats = [
-    "LÃ­quido desengrasante especial",
+    "Líquido desengrasante especial",
     "Limpieza de filtros y evaporador",
-    "RevisiÃ³n de gas refrigerante",
-    "RevisiÃ³n elÃ©ctrica y de compresor",
+    "Revisión de gas refrigerante",
+    "Revisión eléctrica y de compresor",
   ];
-  if (hasSymptoms) mats.push("DiagnÃ³stico y reparaciÃ³n de fallas detectadas");
+  if (hasSymptoms) mats.push("Diagnóstico y reparación de fallas detectadas");
 
   return { materialsMin: matMin, materialsMax: matMax, laborMin: labMin, laborMax: labMax, materials: mats };
 }
@@ -132,7 +132,7 @@ function fmtRD(n: number) {
   return `RD$${n.toLocaleString("es-DO")}`;
 }
 
-// â”€â”€â”€ Icons (inline SVG) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Icons (inline SVG) ───────────────────────────────────────────────────────
 
 const IconSnowflake = ({ size = 24, className = "" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -204,12 +204,12 @@ const IconInstagram = ({ size = 20, className = "" }) => (
   </svg>
 );
 
-// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const WA_NUMBER = BUSINESS.whatsappInternational;
 
 const SYMPTOMS = [
-  { value: "no_enfria", label: "No enfrÃ­a bien" },
+  { value: "no_enfria", label: "No enfría bien" },
   { value: "ruido", label: "Hace ruido" },
   { value: "gotea", label: "Gotea agua" },
   { value: "mal_olor", label: "Mal olor" },
@@ -217,7 +217,7 @@ const SYMPTOMS = [
   { value: "mantenimiento", label: "Mantenimiento preventivo de rutina" },
 ];
 
-// â”€â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StepIndicator({ step }: { step: Step }) {
   return (
@@ -293,7 +293,7 @@ function Select({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectEle
   );
 }
 
-// â”€â”€â”€ Main App â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main App ─────────────────────────────────────────────────────────────────
 
 
 function IconHome({ size = 24 }: { size?: number }) {
@@ -330,22 +330,22 @@ export default function App() {
         : "Consultar precio";
 
     const details = [
-      "Hola, quiero cotizar este producto de Nexter IngenierÃ­a:",
+      "Hola, quiero cotizar este producto de Nexter Ingeniería:",
       "",
       `Producto: ${product.name}`,
       product.brand ? `Marca: ${product.brand}` : null,
-      product.category ? `CategorÃ­a: ${product.category}` : null,
+      product.category ? `Categoría: ${product.category}` : null,
       product.btu ? `BTU: ${product.btu}` : null,
       `Precio: ${priceText}`,
       typeof product.stock === "number"
         ? `Disponibilidad: ${product.stock > 0 ? product.stock + " unidad(es)" : "Agotado"}`
         : null,
-      product.description ? `DescripciÃ³n: ${product.description}` : null,
+      product.description ? `Descripción: ${product.description}` : null,
       "",
-      "Me gustarÃ­a recibir informaciÃ³n para realizar la cotizaciÃ³n.",
+      "Me gustaría recibir información para realizar la cotización.",
     ].filter(Boolean);
 
-    return `https://wa.me/18298893908?text=${encodeURIComponent(details.join("\n"))}`;
+    return `https://wa.me/18297082720?text=${encodeURIComponent(details.join("\n"))}`;
   };
 
 
@@ -430,8 +430,8 @@ export default function App() {
       if (!installData.distance) e.distance = "Selecciona la distancia";
     } else {
       if (!maintData.acType) e.acType = "Selecciona el tipo de aire";
-      if (!maintData.lastMaint) e.lastMaint = "Selecciona cuÃ¡ndo fue el Ãºltimo mantenimiento";
-      if (maintData.symptoms.length === 0) e.symptoms = "Selecciona al menos un sÃ­ntoma";
+      if (!maintData.lastMaint) e.lastMaint = "Selecciona cuándo fue el último mantenimiento";
+      if (maintData.symptoms.length === 0) e.symptoms = "Selecciona al menos un síntoma";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -440,8 +440,8 @@ export default function App() {
   function validateContact(): boolean {
     const e: Record<string, string> = {};
     if (!contact.name.trim()) e.name = "Ingresa tu nombre completo";
-    if (!contact.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)) e.email = "Ingresa un correo vÃ¡lido";
-    if (!contact.whatsapp.trim() || !/^\+?[\d\s\-]{8,15}$/.test(contact.whatsapp)) e.whatsapp = "Ingresa un nÃºmero de WhatsApp vÃ¡lido";
+    if (!contact.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)) e.email = "Ingresa un correo válido";
+    if (!contact.whatsapp.trim() || !/^\+?[\d\s\-]{8,15}$/.test(contact.whatsapp)) e.whatsapp = "Ingresa un número de WhatsApp válido";
     if (!contact.zone.trim()) e.zone = "Indica tu zona o sector";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -459,45 +459,45 @@ export default function App() {
 
   function buildWAMessage(): string {
     const lines: string[] = [];
-    lines.push("ðŸŒ¬ï¸ *SOLICITUD DE COTIZACIÃ“N â€” Nexter IngenierÃ­a*");
-    lines.push("â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€");
-    lines.push(`ðŸ“‹ *Servicio:* ${serviceType === "installation" ? "InstalaciÃ³n nueva" : "Mantenimiento"}`);
+    lines.push("🌬️ *SOLICITUD DE COTIZACIÓN — Nexter Ingeniería*");
+    lines.push("─────────────────────────────");
+    lines.push(`📋 *Servicio:* ${serviceType === "installation" ? "Instalación nueva" : "Mantenimiento"}`);
 
     if (serviceType === "installation") {
-      lines.push(`â„ï¸ *Tipo de aire:* ${installData.acType || "No especificado"}`);
-      lines.push(`âš¡ *Capacidad BTU:* ${installData.btu !== "nosÃ©" ? installData.btu + " BTU" : "Por definir"}`);
-      lines.push(`ðŸ”¢ *Cantidad de unidades:* ${installData.quantity}`);
+      lines.push(`❄️ *Tipo de aire:* ${installData.acType || "No especificado"}`);
+      lines.push(`⚡ *Capacidad BTU:* ${installData.btu !== "nosé" ? installData.btu + " BTU" : "Por definir"}`);
+      lines.push(`🔢 *Cantidad de unidades:* ${installData.quantity}`);
       const distLabel = installData.distance === "menos3" ? "Menos de 3 m"
         : installData.distance === "3a6" ? "Entre 3 y 6 m"
-        : installData.distance === "mas6" ? "MÃ¡s de 6 m" : "No especificada";
-      lines.push(`ðŸ“ *Distancia tuberÃ­a:* ${distLabel}`);
-      if (installData.description) lines.push(`ðŸ’¬ *Detalles:* ${installData.description}`);
+        : installData.distance === "mas6" ? "Más de 6 m" : "No especificada";
+      lines.push(`📏 *Distancia tubería:* ${distLabel}`);
+      if (installData.description) lines.push(`💬 *Detalles:* ${installData.description}`);
     } else {
-      lines.push(`â„ï¸ *Tipo de aire:* ${maintData.acType || "No especificado"}`);
-      lines.push(`ðŸ”¢ *Cantidad de unidades:* ${maintData.quantity}`);
+      lines.push(`❄️ *Tipo de aire:* ${maintData.acType || "No especificado"}`);
+      lines.push(`🔢 *Cantidad de unidades:* ${maintData.quantity}`);
       const lastLabel = {
         "menos6": "Menos de 6 meses",
         "6a12": "Entre 6 y 12 meses",
-        "mas1": "MÃ¡s de un aÃ±o",
+        "mas1": "Más de un año",
         "nunca": "Nunca",
       }[maintData.lastMaint] ?? "No especificado";
-      lines.push(`ðŸ• *Ãšltimo mantenimiento:* ${lastLabel}`);
+      lines.push(`🕐 *Último mantenimiento:* ${lastLabel}`);
       const symLabels = maintData.symptoms.map(s => SYMPTOMS.find(x => x.value === s)?.label ?? s);
-      lines.push(`ðŸ” *SÃ­ntomas:* ${symLabels.join(", ")}`);
-      if (maintData.description) lines.push(`ðŸ’¬ *Detalles:* ${maintData.description}`);
+      lines.push(`🔍 *Síntomas:* ${symLabels.join(", ")}`);
+      if (maintData.description) lines.push(`💬 *Detalles:* ${maintData.description}`);
     }
 
     if (quote) {
-      lines.push("â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€");
-      lines.push("ðŸ’° *COTIZACIÃ“N ESTIMADA*");
-      lines.push(`ðŸ”© Materiales: ${fmtRD(quote.materialsMin)} â€“ ${fmtRD(quote.materialsMax)}`);
-      lines.push(`ðŸ‘¨â€ðŸ”§ Mano de obra: ${fmtRD(quote.laborMin)} â€“ ${fmtRD(quote.laborMax)}`);
-      lines.push(`ðŸ“Š *Total estimado: ${fmtRD(quote.materialsMin + quote.laborMin)} â€“ ${fmtRD(quote.materialsMax + quote.laborMax)}*`);
-      lines.push("âš ï¸ _CotizaciÃ³n preliminar, sujeta a inspecciÃ³n._");
+      lines.push("─────────────────────────────");
+      lines.push("💰 *COTIZACIÓN ESTIMADA*");
+      lines.push(`🔩 Materiales: ${fmtRD(quote.materialsMin)} – ${fmtRD(quote.materialsMax)}`);
+      lines.push(`👨‍🔧 Mano de obra: ${fmtRD(quote.laborMin)} – ${fmtRD(quote.laborMax)}`);
+      lines.push(`📊 *Total estimado: ${fmtRD(quote.materialsMin + quote.laborMin)} – ${fmtRD(quote.materialsMax + quote.laborMax)}*`);
+      lines.push("⚠️ _Cotización preliminar, sujeta a inspección._");
     }
 
-    lines.push("â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€");
-    lines.push("ðŸ‘¤ *DATOS DE CONTACTO*");
+    lines.push("─────────────────────────────");
+    lines.push("👤 *DATOS DE CONTACTO*");
     lines.push(`Nombre: ${contact.name}`);
     lines.push(`Correo: ${contact.email}`);
     lines.push(`WhatsApp: ${contact.whatsapp}`);
@@ -529,7 +529,7 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: "#fff", fontFamily: "Inter, sans-serif" }}>
 
-                        {/* â”€â”€ HEADER â”€â”€ */}
+                        {/* ── HEADER ── */}
       
 
 <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur-xl">
@@ -538,11 +538,11 @@ export default function App() {
     <a
       href="#inicio"
       className="flex shrink-0 items-center gap-3"
-      aria-label="Nexter IngenierÃ­a - Inicio"
+      aria-label="Nexter Ingeniería - Inicio"
     >
       <img
         src="/nexter-mark.png"
-        alt="Nexter IngenierÃ­a"
+        alt="Nexter Ingeniería"
         className="h-[46px] w-[52px] object-contain sm:h-[50px] sm:w-[58px]"
       />
 
@@ -551,7 +551,7 @@ export default function App() {
           Nexter
         </div>
         <div className="text-[20px] font-black tracking-[-0.04em] text-[#ff6b16] sm:text-[23px]">
-          IngenierÃ­a
+          Ingeniería
         </div>
       </div>
     </a>
@@ -568,13 +568,13 @@ export default function App() {
       href="#cotizador"
       className="hidden rounded-full bg-[#1d92e7] px-8 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-sky-200/60 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#087ed5] lg:inline-flex xl:px-10 xl:py-4 xl:text-[16px]"
     >
-      Solicitar cotizaciÃ³n
+      Solicitar cotización
     </a>
 
     <details className="group relative lg:hidden">
       <summary
         className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white text-[#0b356d] shadow-sm transition hover:bg-sky-50 [&::-webkit-details-marker]:hidden"
-        aria-label="Abrir menÃº"
+        aria-label="Abrir menú"
       >
         <span className="relative block h-5 w-6">
           <span className="absolute left-0 top-0 h-[2px] w-6 rounded bg-current transition group-open:top-[9px] group-open:rotate-45" />
@@ -596,7 +596,7 @@ export default function App() {
           href="#cotizador"
           className="mt-2 flex items-center justify-center rounded-xl bg-[#1d92e7] px-4 py-3 font-bold text-white hover:bg-[#087ed5]"
         >
-          Solicitar cotizaciÃ³n
+          Solicitar cotización
         </a>
       </div>
     </details>
@@ -604,7 +604,7 @@ export default function App() {
   </div>
 </header>
 
-      {/* â”€â”€ HERO â”€â”€ */}
+      {/* ── HERO ── */}
       
 
 
@@ -643,7 +643,7 @@ export default function App() {
 
       <div className="py-7 sm:py-8 lg:py-6">
         <h1 className="max-w-[600px] font-[Outfit,sans-serif] text-[44px] font-black leading-[0.98] tracking-[-0.045em] text-[#0b356d] sm:text-[54px] lg:text-[61px]">
-          ClimatizaciÃ³n
+          Climatización
           <br />
           que impulsa
           <br />
@@ -651,8 +651,8 @@ export default function App() {
         </h1>
 
         <p className="mt-6 max-w-[585px] text-[17px] leading-[1.58] text-slate-600 sm:text-[18px] lg:text-[18px]">
-          Soluciones de climatizaciÃ³n, mantenimiento y servicio tÃ©cnico
-          para hogares, comercios e industrias en toda la RepÃºblica Dominicana.
+          Soluciones de climatización, mantenimiento y servicio técnico
+          para hogares, comercios e industrias en toda la República Dominicana.
         </p>
 
         <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
@@ -668,10 +668,10 @@ export default function App() {
                 <path d="M14 2.75v4h4" />
                 <path d="M9 12h6M9 16h4" />
               </svg>
-              Solicitar cotizaciÃ³n
+              Solicitar cotización
             </span>
 
-            <span className="text-[22px] leading-none">â†’</span>
+            <span className="text-[22px] leading-none">→</span>
           </button>
 
           <a href="#servicios" className="flex items-center gap-4 text-[#0b356d]">
@@ -724,10 +724,10 @@ export default function App() {
 
           <div>
             <h3 className="text-[16px] font-extrabold leading-[1.3] text-[#0b356d]">
-              Servicio tÃ©cnico<br />especializado
+              Servicio técnico<br />especializado
             </h3>
             <p className="mt-1.5 text-[13px] leading-[1.45] text-slate-500">
-              DiagnÃ³stico y reparaciÃ³n<br />multimarca
+              Diagnóstico y reparación<br />multimarca
             </p>
           </div>
         </div>
@@ -746,7 +746,7 @@ export default function App() {
               Mantenimiento<br />preventivo
             </h3>
             <p className="mt-1.5 text-[13px] leading-[1.45] text-slate-500">
-              Mayor vida Ãºtil y<br />eficiencia energÃ©tica
+              Mayor vida útil y<br />eficiencia energética
             </p>
           </div>
         </div>
@@ -779,7 +779,7 @@ export default function App() {
 
           <div>
             <h3 className="text-[16px] font-extrabold leading-[1.3] text-[#0b356d]">
-              AtenciÃ³n en<br />toda RD
+              Atención en<br />toda RD
             </h3>
             <p className="mt-1.5 text-[13px] leading-[1.45] text-slate-500">
               Santo Domingo y<br />zonas regionales
@@ -793,16 +793,16 @@ export default function App() {
 
 </section>
 
-{/* â”€â”€ SERVICIOS â”€â”€ */}
+{/* ── SERVICIOS ── */}
       <section id="servicios" className="bg-[#f7fbff] py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <span className="text-xs font-800 uppercase tracking-[.22em] text-brand-600">Nuestras soluciones</span>
             <h2 className="mt-3 font-[Outfit,sans-serif] text-3xl font-800 tracking-tight text-[#0f2744] sm:text-4xl">
-              IngenierÃ­a aplicada a tu confort
+              Ingeniería aplicada a tu confort
             </h2>
             <p className="mt-4 text-slate-600">
-              Servicio tÃ©cnico especializado para hogares, comercios y proyectos que requieren soluciones confiables.
+              Servicio técnico especializado para hogares, comercios y proyectos que requieren soluciones confiables.
             </p>
           </div>
 
@@ -810,20 +810,20 @@ export default function App() {
             {[
               {
                 icon: <IconSnowflake size={25} />,
-                title: "ClimatizaciÃ³n",
-                desc: "InstalaciÃ³n de equipos split, inverter, ventana y sistemas comerciales con terminaciÃ³n profesional.",
+                title: "Climatización",
+                desc: "Instalación de equipos split, inverter, ventana y sistemas comerciales con terminación profesional.",
                 accent: "bg-brand-500",
               },
               {
                 icon: <IconWrench size={25} />,
-                title: "Servicio tÃ©cnico",
-                desc: "DiagnÃ³stico y reparaciÃ³n de fallas elÃ©ctricas, drenaje, refrigeraciÃ³n y funcionamiento general.",
+                title: "Servicio técnico",
+                desc: "Diagnóstico y reparación de fallas eléctricas, drenaje, refrigeración y funcionamiento general.",
                 accent: "bg-accent-500",
               },
               {
                 icon: <IconCheck size={25} />,
                 title: "Mantenimiento",
-                desc: "Planes preventivos y correctivos orientados a prolongar la vida Ãºtil y eficiencia de tus equipos.",
+                desc: "Planes preventivos y correctivos orientados a prolongar la vida útil y eficiencia de tus equipos.",
                 accent: "bg-brand-700",
               },
             ].map((svc) => (
@@ -840,7 +840,7 @@ export default function App() {
                   onClick={scrollToQuoter}
                   className="mt-6 inline-flex items-center gap-2 text-sm font-800 text-brand-600 transition-all group-hover:gap-3 group-hover:text-brand-700"
                 >
-                  Solicitar cotizaciÃ³n <span>â†’</span>
+                  Solicitar cotización <span>→</span>
                 </button>
               </article>
             ))}
@@ -849,9 +849,9 @@ export default function App() {
       </section>
 
 
-      {/* â”€â”€ PRODUCTOS â”€â”€ */}
+      {/* ── PRODUCTOS ── */}
       
-      {/* â”€â”€ PRODUCTOS DESDE SUPABASE â”€â”€ */}
+      {/* ── PRODUCTOS DESDE SUPABASE ── */}
       <section id="productos" className="scroll-mt-24 bg-white px-[5.8%] py-20">
         <div className="mx-auto max-w-[1672px]">
           <div className="mb-10">
@@ -862,7 +862,7 @@ export default function App() {
               Equipos disponibles
             </h2>
             <p className="mt-4 max-w-2xl text-[17px] leading-7 text-slate-600">
-              Equipos publicados en nuestro catÃ¡logo y disponibles para cotizaciÃ³n.
+              Equipos publicados en nuestro catálogo y disponibles para cotización.
             </p>
           </div>
 
@@ -894,7 +894,7 @@ export default function App() {
                   <div className="p-6">
                     <div className="flex flex-wrap items-center gap-2 text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#168df0]">
                       {product.brand && <span>{product.brand}</span>}
-                      {product.category && <span>â€¢ {product.category}</span>}
+                      {product.category && <span>• {product.category}</span>}
                     </div>
 
                     <h3 className="mt-2 text-[22px] font-extrabold text-[#0b2a56]">
@@ -952,7 +952,7 @@ export default function App() {
                 No hay productos publicados en este momento
               </h3>
               <p className="mt-2 text-slate-600">
-                Los equipos marcados como publicados en Supabase aparecerÃ¡n aquÃ­ automÃ¡ticamente.
+                Los equipos marcados como publicados en Supabase aparecerán aquí automáticamente.
               </p>
             </div>
           )}
@@ -960,12 +960,12 @@ export default function App() {
       </section>
 
 
-{/* â”€â”€ COTIZADOR â”€â”€ */}
+{/* ── COTIZADOR ── */}
       <section id="cotizador" ref={quoterRef} className="py-20 bg-white">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h2 className="font-[Outfit,sans-serif] font-700 text-3xl sm:text-4xl text-slate-900 mb-3">Cotizador interactivo</h2>
-            <p className="text-slate-500 text-lg">ObtÃ©n un estimado al instante. Completa los pasos y te enviamos el detalle por WhatsApp.</p>
+            <p className="text-slate-500 text-lg">Obtén un estimado al instante. Completa los pasos y te enviamos el detalle por WhatsApp.</p>
           </div>
 
           <div className="bg-white rounded-3xl border-2 border-slate-100 shadow-xl p-6 sm:p-8">
@@ -974,7 +974,7 @@ export default function App() {
             {/* STEP 1 */}
             {step === 1 && (
               <div>
-                <h3 className="font-[Outfit,sans-serif] font-700 text-xl text-slate-900 mb-6 text-center">Â¿QuÃ© servicio necesitas?</h3>
+                <h3 className="font-[Outfit,sans-serif] font-700 text-xl text-slate-900 mb-6 text-center">¿Qué servicio necesitas?</h3>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <button
                     type="button"
@@ -988,8 +988,8 @@ export default function App() {
                     <div className="w-12 h-12 rounded-xl bg-brand-100 flex items-center justify-center mb-4 group-hover:bg-brand-200 transition-colors">
                       <IconSnowflake size={24} className="text-brand-600" />
                     </div>
-                    <div className="font-[Outfit,sans-serif] font-700 text-lg text-slate-900 mb-1">ðŸ› ï¸ InstalaciÃ³n nueva</div>
-                    <div className="text-slate-500 text-sm">Instalar uno o mÃ¡s equipos de A/C</div>
+                    <div className="font-[Outfit,sans-serif] font-700 text-lg text-slate-900 mb-1">🛠️ Instalación nueva</div>
+                    <div className="text-slate-500 text-sm">Instalar uno o más equipos de A/C</div>
                   </button>
                   <button
                     type="button"
@@ -1003,22 +1003,22 @@ export default function App() {
                     <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center mb-4 group-hover:bg-orange-200 transition-colors">
                       <IconWrench size={24} className="text-accent-600" />
                     </div>
-                    <div className="font-[Outfit,sans-serif] font-700 text-lg text-slate-900 mb-1">ðŸ”§ Mantenimiento</div>
-                    <div className="text-slate-500 text-sm">Preventivo, correctivo o reparaciÃ³n</div>
+                    <div className="font-[Outfit,sans-serif] font-700 text-lg text-slate-900 mb-1">🔧 Mantenimiento</div>
+                    <div className="text-slate-500 text-sm">Preventivo, correctivo o reparación</div>
                   </button>
                 </div>
               </div>
             )}
 
-            {/* STEP 2A â€” Installation */}
+            {/* STEP 2A — Installation */}
             {step === 2 && serviceType === "installation" && (
               <div className="space-y-5">
-                <h3 className="font-[Outfit,sans-serif] font-700 text-xl text-slate-900 mb-2">Detalles de la instalaciÃ³n</h3>
+                <h3 className="font-[Outfit,sans-serif] font-700 text-xl text-slate-900 mb-2">Detalles de la instalación</h3>
 
                 <div>
                   <Label required>Tipo de aire acondicionado</Label>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {["Split", "Ventana", "Inverter", "Central", "No sÃ©"].map(t => (
+                    {["Split", "Ventana", "Inverter", "Central", "No sé"].map(t => (
                       <SelectBtn key={t} selected={installData.acType === t} onClick={() => setInstallData(d => ({ ...d, acType: t }))}>
                         {t}
                       </SelectBtn>
@@ -1031,16 +1031,16 @@ export default function App() {
                   <Label required>Capacidad en BTU</Label>
                   <Select value={installData.btu} onChange={e => setInstallData(d => ({ ...d, btu: e.target.value }))}>
                     <option value="">Selecciona la capacidad</option>
-                    <option value="9000">9,000 BTU â€” HabitaciÃ³n pequeÃ±a (~12 mÂ²)</option>
-                    <option value="12000">12,000 BTU â€” HabitaciÃ³n mediana (~18 mÂ²)</option>
-                    <option value="18000">18,000 BTU â€” Sala o habitaciÃ³n grande (~25 mÂ²)</option>
-                    <option value="24000">24,000 BTU â€” Espacio amplio o comercial (~35 mÂ²)</option>
-                    <option value="nosÃ©">No sÃ© â€” ayÃºdame a elegir</option>
+                    <option value="9000">9,000 BTU — Habitación pequeña (~12 m²)</option>
+                    <option value="12000">12,000 BTU — Habitación mediana (~18 m²)</option>
+                    <option value="18000">18,000 BTU — Sala o habitación grande (~25 m²)</option>
+                    <option value="24000">24,000 BTU — Espacio amplio o comercial (~35 m²)</option>
+                    <option value="nosé">No sé — ayúdame a elegir</option>
                   </Select>
                   {errors.btu && <p className="text-red-500 text-xs mt-1">{errors.btu}</p>}
-                  {installData.btu === "nosÃ©" && (
+                  {installData.btu === "nosé" && (
                     <div className="mt-2 p-3 bg-brand-50 rounded-xl text-xs text-brand-700 border border-brand-100">
-                      ðŸ’¡ <strong>Â¿No sabes el BTU?</strong> Mide el largo Ã— ancho de la habitaciÃ³n. Para hasta 12 mÂ² elige 9,000 BTU; 12-18 mÂ² â†’ 12,000; 18-28 mÂ² â†’ 18,000; mÃ¡s de 28 mÂ² â†’ 24,000.
+                      💡 <strong>¿No sabes el BTU?</strong> Mide el largo × ancho de la habitación. Para hasta 12 m² elige 9,000 BTU; 12-18 m² → 12,000; 18-28 m² → 18,000; más de 28 m² → 24,000.
                     </div>
                   )}
                 </div>
@@ -1049,7 +1049,7 @@ export default function App() {
                   <Label required>Cantidad de unidades a instalar</Label>
                   <div className="flex items-center gap-3">
                     <button type="button" onClick={() => setInstallData(d => ({ ...d, quantity: Math.max(1, d.quantity - 1) }))}
-                      className="w-10 h-10 rounded-xl border-2 border-slate-200 flex items-center justify-center text-lg font-bold text-slate-600 hover:border-brand-400 transition-colors">âˆ’</button>
+                      className="w-10 h-10 rounded-xl border-2 border-slate-200 flex items-center justify-center text-lg font-bold text-slate-600 hover:border-brand-400 transition-colors">−</button>
                     <span className="font-[Outfit,sans-serif] font-700 text-2xl text-slate-900 w-8 text-center">{installData.quantity}</span>
                     <button type="button" onClick={() => setInstallData(d => ({ ...d, quantity: Math.min(10, d.quantity + 1) }))}
                       className="w-10 h-10 rounded-xl border-2 border-slate-200 flex items-center justify-center text-lg font-bold text-slate-600 hover:border-brand-400 transition-colors">+</button>
@@ -1061,8 +1061,8 @@ export default function App() {
                   <div className="space-y-2">
                     {[
                       { value: "menos3", label: "Menos de 3 metros", hint: "Pared con pared, muy cerca" },
-                      { value: "3a6", label: "Entre 3 y 6 metros", hint: "Distancia estÃ¡ndar" },
-                      { value: "mas6", label: "MÃ¡s de 6 metros", hint: "Requiere tuberÃ­a larga adicional" },
+                      { value: "3a6", label: "Entre 3 y 6 metros", hint: "Distancia estándar" },
+                      { value: "mas6", label: "Más de 6 metros", hint: "Requiere tubería larga adicional" },
                     ].map(opt => (
                       <SelectBtn key={opt.value} selected={installData.distance === opt.value} onClick={() => setInstallData(d => ({ ...d, distance: opt.value }))}>
                         <span className="font-semibold">{opt.label}</span>
@@ -1074,10 +1074,10 @@ export default function App() {
                 </div>
 
                 <div>
-                  <Label>CuÃ©ntanos mÃ¡s sobre tu espacio</Label>
+                  <Label>Cuéntanos más sobre tu espacio</Label>
                   <Textarea
                     rows={3}
-                    placeholder="Ej.: Oficina en el 3er piso, pared de concreto, sin toma elÃ©ctrica cercana..."
+                    placeholder="Ej.: Oficina en el 3er piso, pared de concreto, sin toma eléctrica cercana..."
                     value={installData.description}
                     onChange={e => setInstallData(d => ({ ...d, description: e.target.value }))}
                   />
@@ -1085,16 +1085,16 @@ export default function App() {
 
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => { setStep(1); setErrors({}); }} className="flex-1 py-3 rounded-xl border-2 border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-                    â† AtrÃ¡s
+                    ← Atrás
                   </button>
                   <button type="button" onClick={handleStep2Next} className="flex-2 flex-grow py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm transition-all duration-200 active:scale-95">
-                    Ver mi cotizaciÃ³n â†’
+                    Ver mi cotización →
                   </button>
                 </div>
               </div>
             )}
 
-            {/* STEP 2B â€” Maintenance */}
+            {/* STEP 2B — Maintenance */}
             {step === 2 && serviceType === "maintenance" && (
               <div className="space-y-5">
                 <h3 className="font-[Outfit,sans-serif] font-700 text-xl text-slate-900 mb-2">Detalles del mantenimiento</h3>
@@ -1102,7 +1102,7 @@ export default function App() {
                 <div>
                   <Label required>Tipo de aire acondicionado</Label>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {["Split", "Ventana", "Inverter", "Central", "No sÃ©"].map(t => (
+                    {["Split", "Ventana", "Inverter", "Central", "No sé"].map(t => (
                       <SelectBtn key={t} selected={maintData.acType === t} onClick={() => setMaintData(d => ({ ...d, acType: t }))}>
                         {t}
                       </SelectBtn>
@@ -1115,7 +1115,7 @@ export default function App() {
                   <Label required>Cantidad de unidades</Label>
                   <div className="flex items-center gap-3">
                     <button type="button" onClick={() => setMaintData(d => ({ ...d, quantity: Math.max(1, d.quantity - 1) }))}
-                      className="w-10 h-10 rounded-xl border-2 border-slate-200 flex items-center justify-center text-lg font-bold text-slate-600 hover:border-brand-400 transition-colors">âˆ’</button>
+                      className="w-10 h-10 rounded-xl border-2 border-slate-200 flex items-center justify-center text-lg font-bold text-slate-600 hover:border-brand-400 transition-colors">−</button>
                     <span className="font-[Outfit,sans-serif] font-700 text-2xl text-slate-900 w-8 text-center">{maintData.quantity}</span>
                     <button type="button" onClick={() => setMaintData(d => ({ ...d, quantity: Math.min(10, d.quantity + 1) }))}
                       className="w-10 h-10 rounded-xl border-2 border-slate-200 flex items-center justify-center text-lg font-bold text-slate-600 hover:border-brand-400 transition-colors">+</button>
@@ -1123,12 +1123,12 @@ export default function App() {
                 </div>
 
                 <div>
-                  <Label required>Â¿CuÃ¡ndo fue el Ãºltimo mantenimiento?</Label>
+                  <Label required>¿Cuándo fue el último mantenimiento?</Label>
                   <div className="space-y-2">
                     {[
                       { value: "menos6", label: "Menos de 6 meses" },
                       { value: "6a12", label: "Entre 6 y 12 meses" },
-                      { value: "mas1", label: "Hace mÃ¡s de un aÃ±o" },
+                      { value: "mas1", label: "Hace más de un año" },
                       { value: "nunca", label: "Nunca le han dado mantenimiento" },
                     ].map(opt => (
                       <SelectBtn key={opt.value} selected={maintData.lastMaint === opt.value} onClick={() => setMaintData(d => ({ ...d, lastMaint: opt.value }))}>
@@ -1140,7 +1140,7 @@ export default function App() {
                 </div>
 
                 <div>
-                  <Label required>SÃ­ntomas o motivo del servicio</Label>
+                  <Label required>Síntomas o motivo del servicio</Label>
                   <div className="space-y-2">
                     {SYMPTOMS.map(s => (
                       <label key={s.value} className="flex items-center gap-3 cursor-pointer group">
@@ -1164,10 +1164,10 @@ export default function App() {
                 </div>
 
                 <div>
-                  <Label>Describe el problema con mÃ¡s detalle</Label>
+                  <Label>Describe el problema con más detalle</Label>
                   <Textarea
                     rows={3}
-                    placeholder="Ej.: El equipo gotea cuando estÃ¡ encendido mÃ¡s de 2 horas y tiene un olor a humedad..."
+                    placeholder="Ej.: El equipo gotea cuando está encendido más de 2 horas y tiene un olor a humedad..."
                     value={maintData.description}
                     onChange={e => setMaintData(d => ({ ...d, description: e.target.value }))}
                   />
@@ -1175,16 +1175,16 @@ export default function App() {
 
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => { setStep(1); setErrors({}); }} className="flex-1 py-3 rounded-xl border-2 border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-                    â† AtrÃ¡s
+                    ← Atrás
                   </button>
                   <button type="button" onClick={handleStep2Next} className="flex-grow py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm transition-all duration-200 active:scale-95">
-                    Ver mi cotizaciÃ³n â†’
+                    Ver mi cotización →
                   </button>
                 </div>
               </div>
             )}
 
-            {/* STEP 3 â€” Quote + Contact */}
+            {/* STEP 3 — Quote + Contact */}
             {step === 3 && quote && (
               <div className="space-y-6">
                 {/* Quote result */}
@@ -1193,21 +1193,21 @@ export default function App() {
                     <div className="w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center">
                       <IconCheck size={16} className="text-white" />
                     </div>
-                    <h3 className="font-[Outfit,sans-serif] font-700 text-lg text-brand-900">CotizaciÃ³n preliminar</h3>
+                    <h3 className="font-[Outfit,sans-serif] font-700 text-lg text-brand-900">Cotización preliminar</h3>
                   </div>
 
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between items-center py-2 border-b border-brand-200">
-                      <span className="text-sm text-slate-600">ðŸ”© Materiales estimados</span>
-                      <span className="font-semibold text-slate-800 text-sm">{fmtRD(quote.materialsMin)} â€“ {fmtRD(quote.materialsMax)}</span>
+                      <span className="text-sm text-slate-600">🔩 Materiales estimados</span>
+                      <span className="font-semibold text-slate-800 text-sm">{fmtRD(quote.materialsMin)} – {fmtRD(quote.materialsMax)}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-brand-200">
-                      <span className="text-sm text-slate-600">ðŸ‘¨â€ðŸ”§ Mano de obra</span>
-                      <span className="font-semibold text-slate-800 text-sm">{fmtRD(quote.laborMin)} â€“ {fmtRD(quote.laborMax)}</span>
+                      <span className="text-sm text-slate-600">👨‍🔧 Mano de obra</span>
+                      <span className="font-semibold text-slate-800 text-sm">{fmtRD(quote.laborMin)} – {fmtRD(quote.laborMax)}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
                       <span className="font-[Outfit,sans-serif] font-700 text-slate-800">Total estimado</span>
-                      <span className="font-[Outfit,sans-serif] font-800 text-brand-700 text-lg">{fmtRD(totalMin)} â€“ {fmtRD(totalMax)}</span>
+                      <span className="font-[Outfit,sans-serif] font-800 text-brand-700 text-lg">{fmtRD(totalMin)} – {fmtRD(totalMax)}</span>
                     </div>
                   </div>
 
@@ -1224,7 +1224,7 @@ export default function App() {
                   </div>
 
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
-                    âš ï¸ <strong>CotizaciÃ³n preliminar.</strong> El precio final se confirma tras la inspecciÃ³n tÃ©cnica gratuita en sitio.
+                    ⚠️ <strong>Cotización preliminar.</strong> El precio final se confirma tras la inspección técnica gratuita en sitio.
                   </div>
                 </div>
 
@@ -1236,14 +1236,14 @@ export default function App() {
                       <Label required>Nombre completo</Label>
                       <Input
                         type="text"
-                        placeholder="Ej.: MarÃ­a GarcÃ­a"
+                        placeholder="Ej.: María García"
                         value={contact.name}
                         onChange={e => setContact(c => ({ ...c, name: e.target.value }))}
                       />
                       {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                     </div>
                     <div>
-                      <Label required>Correo electrÃ³nico</Label>
+                      <Label required>Correo electrónico</Label>
                       <Input
                         type="email"
                         placeholder="tu@correo.com"
@@ -1253,7 +1253,7 @@ export default function App() {
                       {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                     </div>
                     <div>
-                      <Label required>NÃºmero de WhatsApp</Label>
+                      <Label required>Número de WhatsApp</Label>
                       <Input
                         type="tel"
                         placeholder="+1 829 555 0000"
@@ -1286,11 +1286,11 @@ export default function App() {
                   Enviar solicitud por WhatsApp
                 </button>
                 <p className="text-center text-xs text-slate-400">
-                  Se abrirÃ¡ WhatsApp con el mensaje listo para enviar. Solo presiona "Enviar".
+                  Se abrirá WhatsApp con el mensaje listo para enviar. Solo presiona "Enviar".
                 </p>
 
                 <button type="button" onClick={resetQuoter} className="w-full py-2.5 rounded-xl text-sm text-slate-400 hover:text-slate-600 transition-colors">
-                  â† Nueva cotizaciÃ³n
+                  ← Nueva cotización
                 </button>
               </div>
             )}
@@ -1300,10 +1300,10 @@ export default function App() {
 
       <StatusLookupSection />
 
-      {/* â”€â”€ TESTIMONIOS â”€â”€ */}
+      {/* ── TESTIMONIOS ── */}
       
 
-      {/* â”€â”€ FOOTER â”€â”€ */}
+      {/* ── FOOTER ── */}
             
       
       
@@ -1339,7 +1339,7 @@ export default function App() {
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl font-bold text-slate-600 transition hover:bg-slate-200"
                 aria-label="Cerrar"
               >
-                Ã—
+                ×
               </button>
             </div>
 
@@ -1353,7 +1353,7 @@ export default function App() {
                   />
                 ) : (
                   <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#e5f5ff] text-4xl">
-                    â„
+                    ❄
                   </div>
                 )}
               </div>
@@ -1374,7 +1374,7 @@ export default function App() {
                   {selectedProduct.category && (
                     <div className="rounded-2xl bg-slate-50 p-4">
                       <span className="block text-xs font-bold uppercase tracking-wider text-slate-400">
-                        CategorÃ­a
+                        Categoría
                       </span>
                       <span className="mt-1 block font-bold text-[#0b2a56]">
                         {selectedProduct.category}
@@ -1409,7 +1409,7 @@ export default function App() {
 
                 {selectedProduct.description && (
                   <div className="mt-5">
-                    <h4 className="font-extrabold text-[#0b2a56]">DescripciÃ³n</h4>
+                    <h4 className="font-extrabold text-[#0b2a56]">Descripción</h4>
                     <p className="mt-2 leading-7 text-slate-600">
                       {selectedProduct.description}
                     </p>
@@ -1464,7 +1464,7 @@ export default function App() {
             <div className="max-w-[650px] lg:pr-16">
               <div className="inline-flex flex-col">
                 <span className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.30em] text-[#46b8f2]">
-                  IngenierÃ­a & climatizaciÃ³n
+                  Ingeniería & climatización
                 </span>
 
                 <div className="leading-none">
@@ -1472,7 +1472,7 @@ export default function App() {
                     Nexter
                   </span>
                   <span className="mt-1 block text-[34px] font-black tracking-[-0.035em] text-[#f97316] sm:text-[40px]">
-                    IngenierÃ­a
+                    Ingeniería
                   </span>
                 </div>
 
@@ -1480,8 +1480,8 @@ export default function App() {
               </div>
 
               <p className="mt-6 max-w-[640px] text-[16px] leading-[1.75] text-slate-300">
-                ClimatizaciÃ³n, mantenimiento, instalaciÃ³n y servicio tÃ©cnico con
-                soluciones pensadas para mantener tus espacios y tu operaciÃ³n en movimiento.
+                Climatización, mantenimiento, instalación y servicio técnico con
+                soluciones pensadas para mantener tus espacios y tu operación en movimiento.
               </p>
             </div>
 
@@ -1496,7 +1496,7 @@ export default function App() {
                   <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#18a8e5]" strokeWidth="1.8">
                     <path d="M12 2v20M4.22 6.5 19.78 17.5M19.78 6.5 4.22 17.5M7.5 4.22 16.5 19.78M16.5 4.22 7.5 19.78"/>
                   </svg>
-                  <span>InstalaciÃ³n de aires</span>
+                  <span>Instalación de aires</span>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -1511,7 +1511,7 @@ export default function App() {
                     <circle cx="12" cy="12" r="3"/>
                     <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.17.37.39.71.66 1 .28.27.64.45 1.04.5h.1v4h-.1c-.4.05-.76.23-1.04.5-.27.29-.49.63-.66 1Z"/>
                   </svg>
-                  <span>ReparaciÃ³n y diagnÃ³stico</span>
+                  <span>Reparación y diagnóstico</span>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -1527,7 +1527,7 @@ export default function App() {
                     <path d="M12 22s7-3 7-9V5l-7-3-7 3v8c0 6 7 9 7 9Z"/>
                     <path d="m9 12 2 2 4-4"/>
                   </svg>
-                  <span>AsesorÃ­a profesional</span>
+                  <span>Asesoría profesional</span>
                 </div>
               </div>
             </div>
@@ -1535,18 +1535,18 @@ export default function App() {
             {/* Contact */}
             <div className="lg:border-l lg:border-white/20 lg:pl-14 lg:pr-24">
               <h3 className="text-[20px] font-extrabold text-white">
-                ContÃ¡ctanos
+                Contáctanos
               </h3>
 
               <div className="mt-6 space-y-[14px] text-[15px] text-slate-200">
-                <a href="tel:+18298893908" className="flex items-center gap-4 transition hover:text-white">
+                <a href="tel:+18297082720" className="flex items-center gap-4 transition hover:text-white">
                   <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#39aef1]" strokeWidth="1.8">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/>
                   </svg>
-                  <span>829-889-3908</span>
+                  <span>829-708-2720</span>
                 </a>
 
-                <a href="https://wa.me/18298893908" target="_blank" rel="noreferrer" className="flex items-center gap-4 transition hover:text-white">
+                <a href="https://wa.me/18297082720" target="_blank" rel="noreferrer" className="flex items-center gap-4 transition hover:text-white">
                   <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#73b9eb]" strokeWidth="1.8">
                     <circle cx="12" cy="12" r="9"/>
                     <path d="M8.7 8.7c.5 3.5 3.1 6.1 6.6 6.6M8.7 8.7l1.5-.7 1.2 2.3-1 .9M15.3 15.3l.7-1.5-2.3-1.2-.9 1"/>
@@ -1567,18 +1567,17 @@ export default function App() {
                     <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/>
                     <circle cx="12" cy="10" r="2.5"/>
                   </svg>
-                  <span>RepÃºblica Dominicana</span>
+                  <span>República Dominicana</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="mt-10 border-t border-white/20 pt-6 text-[13px] text-slate-300">
-            <p>Â© 2026 Nexter IngenierÃ­a. Todos los derechos reservados.</p>
+            <p>© 2026 Nexter Ingeniería. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
     </div>
   );
 }
-
