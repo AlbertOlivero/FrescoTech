@@ -345,7 +345,7 @@ export default function App() {
       "Me gustaría recibir información para realizar la cotización.",
     ].filter(Boolean);
 
-    return `https://wa.me/18297082720?text=${encodeURIComponent(details.join("\n"))}`;
+    return `https://wa.me/${BUSINESS.whatsappInternational}?text=${encodeURIComponent(details.join("\n"))}`;
   };
 
 
@@ -1539,14 +1539,14 @@ export default function App() {
               </h3>
 
               <div className="mt-6 space-y-[14px] text-[15px] text-slate-200">
-                <a href="tel:+18297082720" className="flex items-center gap-4 transition hover:text-white">
+                <a href={`tel:${BUSINESS.phoneInternational}`} className="flex items-center gap-4 transition hover:text-white">
                   <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#39aef1]" strokeWidth="1.8">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/>
                   </svg>
-                  <span>829-708-2720</span>
+                  <span>{BUSINESS.phoneDisplay}</span>
                 </a>
 
-                <a href="https://wa.me/18297082720" target="_blank" rel="noreferrer" className="flex items-center gap-4 transition hover:text-white">
+                <a href={`https://wa.me/${BUSINESS.whatsappInternational}`} target="_blank" rel="noreferrer" className="flex items-center gap-4 transition hover:text-white">
                   <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#73b9eb]" strokeWidth="1.8">
                     <circle cx="12" cy="12" r="9"/>
                     <path d="M8.7 8.7c.5 3.5 3.1 6.1 6.6 6.6M8.7 8.7l1.5-.7 1.2 2.3-1 .9M15.3 15.3l.7-1.5-2.3-1.2-.9 1"/>
