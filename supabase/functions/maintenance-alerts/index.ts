@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const env = (name: string) => Deno.env.get(name) || "";
+
 const supabase = createClient(
   env("SUPABASE_URL"),
   env("SUPABASE_SERVICE_ROLE_KEY"),
@@ -32,8 +33,10 @@ function escapeHtml(value: unknown) {
 
 function formatDate(value?: string | null) {
   if (!value) return "Sin registro";
+
   const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return value;
+
   return new Intl.DateTimeFormat("es-DO", {
     day: "2-digit",
     month: "long",
@@ -45,19 +48,35 @@ function normalizePhone(value: string) {
   return value.replace(/[^0-9]/g, "");
 }
 
+function publicSiteUrl() {
+  return env("PUBLIC_SITE_URL").trim().replace(/\/$/, "");
+}
+
+function emailLogoUrl() {
+  const explicit = env("EMAIL_LOGO_URL").trim();
+  if (explicit) return explicit;
+
+  const site = publicSiteUrl();
+  if (site.startsWith("https://")) {
+    return `${site}/nexter-mark.png`;
+  }
+
+  return "";
+}
+
 function statusTheme(status: string) {
   if (status === "VENCIDO") {
     return {
       label: "MANTENIMIENTO VENCIDO",
       eyebrow: "ALERTA DE MANTENIMIENTO",
       title: "Llegó la fecha de tu mantenimiento",
-      subject: "Nexter Ingeniería | Llegó la fecha de tu mantenimiento ❄️",
+      subject: "Nexter Ingeniería | Llegó la fecha de tu mantenimiento",
       description:
         "Tu equipo ya llegó a la fecha recomendada de mantenimiento. Te recomendamos agendar el servicio para mantener su buen rendimiento y prevenir averías.",
-      badgeBg: "#fef2f2",
-      badgeText: "#b91c1c",
-      badgeBorder: "#fecaca",
-      iconBg: "#fee2e2",
+      badgeBg: "#fff1f2",
+      badgeText: "#be123c",
+      badgeBorder: "#fecdd3",
+      iconBg: "#ffe4e6",
       icon: "!",
     };
   }
@@ -66,7 +85,7 @@ function statusTheme(status: string) {
     label: "PRÓXIMO A VENCER",
     eyebrow: "RECORDATORIO DE MANTENIMIENTO",
     title: "Tu próximo mantenimiento se acerca",
-    subject: "Nexter Ingeniería | Tu próximo mantenimiento se acerca 🔔",
+    subject: "Nexter Ingeniería | Tu próximo mantenimiento se acerca",
     description:
       "Tu equipo se está acercando a la fecha recomendada de mantenimiento. Puedes reservar con tiempo y elegir el día que mejor te convenga.",
     badgeBg: "#fffbeb",
@@ -78,22 +97,23 @@ function statusTheme(status: string) {
 }
 
 function brandHeader() {
-  const logoUrl = env("EMAIL_LOGO_URL").trim();
+  const logoUrl = emailLogoUrl();
 
   const mark = logoUrl
-    ? `<img src="${escapeHtml(logoUrl)}" width="48" height="48" alt="Nexter Ingeniería" style="display:block;border:0;outline:none;text-decoration:none;border-radius:14px;object-fit:contain;background:#ffffff;" />`
-    : `<div style="width:48px;height:48px;line-height:48px;text-align:center;border-radius:14px;background:#0ea5e9;color:#ffffff;font-size:24px;font-weight:700;">❄</div>`;
+    ? `<img src="${escapeHtml(logoUrl)}" width="54" height="54" alt="Nexter Ingeniería" style="display:block;width:54px;height:54px;border:0;outline:none;text-decoration:none;object-fit:contain;" />`
+    : `<div style="width:54px;height:54px;line-height:54px;text-align:center;border-radius:15px;background:#ffffff;color:#0b74c9;font-size:24px;font-weight:800;">N</div>`;
 
   return `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
       <tr>
-        <td style="padding:28px 30px;background:#0c4a6e;">
+        <td style="padding:25px 28px;background:#ffffff;border-bottom:1px solid #e2e8f0;">
           <table role="presentation" cellspacing="0" cellpadding="0" border="0">
             <tr>
-              <td style="vertical-align:middle;padding-right:14px;">${mark}</td>
+              <td style="vertical-align:middle;padding-right:12px;">${mark}</td>
               <td style="vertical-align:middle;">
-                <div style="font-size:23px;line-height:28px;font-weight:800;color:#ffffff;letter-spacing:-0.3px;">Nexter Ingeniería <span style="color:#38bdf8;">RD</span></div>
-                <div style="margin-top:3px;font-size:10px;line-height:14px;font-weight:700;color:#bae6fd;letter-spacing:2.1px;">CLIMATIZACIÓN · SERVICIO · MANTENIMIENTO</div>
+                <div style="font-family:Arial,Helvetica,sans-serif;font-size:23px;line-height:24px;font-weight:800;color:#0877d8;letter-spacing:-0.5px;">Nexter</div>
+                <div style="font-family:Arial,Helvetica,sans-serif;margin-top:1px;font-size:21px;line-height:22px;font-weight:800;color:#ff6715;letter-spacing:-0.4px;">Ingeniería</div>
+                <div style="margin-top:6px;font-size:9px;line-height:12px;font-weight:700;color:#64748b;letter-spacing:1.45px;">CLIMATIZACIÓN · SERVICIO · MANTENIMIENTO</div>
               </td>
             </tr>
           </table>
@@ -119,15 +139,17 @@ function clientEmailHtml(row: AlertRow, lookupLink: string, waLink: string) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${escapeHtml(theme.subject)}</title>
 </head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a;"><div style="text-align:center;padding:20px 0 12px"><img src="${PUBLIC_SITE_URL}/nexter-logo.png" alt="Nexter Ingeniería" width="280" style="max-width:80%;height:auto;display:inline-block;border:0" /></div>
+<body style="margin:0;padding:0;background:#f4f8fb;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escapeHtml(theme.description)}</div>
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f1f5f9;">
+
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f4f8fb;">
     <tr>
-      <td align="center" style="padding:28px 12px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:620px;background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.08);">
+      <td align="center" style="padding:30px 12px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:620px;background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 12px 36px rgba(15,23,42,.08);">
           <tr><td>${brandHeader()}</td></tr>
+
           <tr>
-            <td style="padding:34px 30px 12px;">
+            <td style="padding:30px 30px 10px;">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td style="vertical-align:middle;padding-right:12px;">
@@ -135,18 +157,20 @@ function clientEmailHtml(row: AlertRow, lookupLink: string, waLink: string) {
                   </td>
                   <td style="vertical-align:middle;">
                     <div style="font-size:11px;line-height:16px;font-weight:800;letter-spacing:1.2px;color:${theme.badgeText};">${escapeHtml(theme.eyebrow)}</div>
-                    <div style="margin-top:2px;font-size:25px;line-height:31px;font-weight:800;color:#0f172a;">${escapeHtml(theme.title)}</div>
+                    <div style="margin-top:2px;font-size:25px;line-height:31px;font-weight:800;color:#0b356d;">${escapeHtml(theme.title)}</div>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
+
           <tr>
             <td style="padding:14px 30px 0;">
               <p style="margin:0 0 12px;font-size:16px;line-height:25px;color:#334155;">Hola, <strong style="color:#0f172a;">${name}</strong>.</p>
               <p style="margin:0;font-size:15px;line-height:24px;color:#475569;">${escapeHtml(theme.description)}</p>
             </td>
           </tr>
+
           <tr>
             <td style="padding:24px 30px 0;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid #e2e8f0;border-radius:18px;background:#f8fafc;">
@@ -171,6 +195,7 @@ function clientEmailHtml(row: AlertRow, lookupLink: string, waLink: string) {
                         <td align="right" style="padding:5px 0;font-size:14px;font-weight:700;color:#0f172a;">${recommended}</td>
                       </tr>
                     </table>
+
                     <div style="margin-top:16px;padding-top:16px;border-top:1px solid #e2e8f0;">
                       <span style="display:inline-block;padding:8px 12px;border:1px solid ${theme.badgeBorder};border-radius:999px;background:${theme.badgeBg};color:${theme.badgeText};font-size:11px;font-weight:800;letter-spacing:.6px;">${theme.label}</span>
                     </div>
@@ -179,13 +204,15 @@ function clientEmailHtml(row: AlertRow, lookupLink: string, waLink: string) {
               </table>
             </td>
           </tr>
+
           <tr>
             <td style="padding:26px 30px 8px;text-align:center;">
               <a href="${escapeHtml(waLink)}" style="display:inline-block;padding:14px 22px;border-radius:13px;background:#16a34a;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;box-shadow:0 6px 14px rgba(22,163,74,.18);">Agendar por WhatsApp</a>
               <div style="height:10px;"></div>
-              <a href="${escapeHtml(lookupLink)}" style="display:inline-block;padding:11px 18px;color:#0369a1;text-decoration:none;font-size:13px;font-weight:700;">Ver estado de mi equipo →</a>
+              <a href="${escapeHtml(lookupLink)}" style="display:inline-block;padding:11px 18px;color:#0877d8;text-decoration:none;font-size:13px;font-weight:700;">Ver estado de mi equipo →</a>
             </td>
           </tr>
+
           <tr>
             <td style="padding:18px 30px 30px;">
               <div style="border-top:1px solid #e2e8f0;padding-top:18px;text-align:center;font-size:12px;line-height:19px;color:#94a3b8;">
@@ -205,25 +232,36 @@ function clientEmailHtml(row: AlertRow, lookupLink: string, waLink: string) {
 
 function adminEmailHtml(row: AlertRow) {
   const theme = statusTheme(row.status);
+
   return `<!doctype html>
 <html lang="es">
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body style="margin:0;padding:0;background:#f4f8fb;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-    <tr><td align="center" style="padding:26px 12px;">
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.08);">
-        <tr><td>${brandHeader()}</td></tr>
-        <tr><td style="padding:28px 30px;">
-          <div style="font-size:12px;font-weight:800;letter-spacing:1px;color:${theme.badgeText};">ALERTA ADMINISTRATIVA · ${theme.label}</div>
-          <h2 style="margin:7px 0 18px;font-size:24px;line-height:30px;">${escapeHtml(row.full_name)}</h2>
-          <div style="padding:18px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0;font-size:14px;line-height:23px;color:#475569;">
-            <strong style="color:#0f172a;">Contacto:</strong> ${escapeHtml(row.phone || "Sin teléfono")} · ${escapeHtml(row.email || "Sin correo")}<br />
-            <strong style="color:#0f172a;">Equipo:</strong> ${escapeHtml(row.brand)} ${escapeHtml(row.equipment_type)}<br />
-            <strong style="color:#0f172a;">Ubicación:</strong> ${escapeHtml(row.location)}<br />
-            <strong style="color:#0f172a;">Último mantenimiento:</strong> ${escapeHtml(formatDate(row.last_maintenance))}
-          </div>
-        </td></tr>
-      </table>
-    </td></tr>
+    <tr>
+      <td align="center" style="padding:26px 12px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.08);">
+          <tr><td>${brandHeader()}</td></tr>
+
+          <tr>
+            <td style="padding:28px 30px;">
+              <div style="font-size:12px;font-weight:800;letter-spacing:1px;color:${theme.badgeText};">ALERTA ADMINISTRATIVA · ${theme.label}</div>
+              <h2 style="margin:7px 0 18px;font-size:24px;line-height:30px;color:#0b356d;">${escapeHtml(row.full_name)}</h2>
+
+              <div style="padding:18px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0;font-size:14px;line-height:23px;color:#475569;">
+                <strong style="color:#0f172a;">Contacto:</strong> ${escapeHtml(row.phone || "Sin teléfono")} · ${escapeHtml(row.email || "Sin correo")}<br />
+                <strong style="color:#0f172a;">Equipo:</strong> ${escapeHtml(row.brand)} ${escapeHtml(row.equipment_type)}<br />
+                <strong style="color:#0f172a;">Ubicación:</strong> ${escapeHtml(row.location)}<br />
+                <strong style="color:#0f172a;">Último mantenimiento:</strong> ${escapeHtml(formatDate(row.last_maintenance))}
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
   </table>
 </body>
 </html>`;
@@ -231,7 +269,12 @@ function adminEmailHtml(row: AlertRow) {
 
 async function sendEmail(to: string, subject: string, html: string) {
   if (!to || !env("RESEND_API_KEY")) {
-    return { ok: false, skipped: true, reason: "missing_recipient_or_resend_key", providerId: null as string | null };
+    return {
+      ok: false,
+      skipped: true,
+      reason: "missing_recipient_or_resend_key",
+      providerId: null as string | null,
+    };
   }
 
   const response = await fetch("https://api.resend.com/emails", {
@@ -249,17 +292,26 @@ async function sendEmail(to: string, subject: string, html: string) {
   });
 
   const bodyText = await response.text();
+
   if (!response.ok) {
     console.error("Resend error", response.status, bodyText);
-    return { ok: false, skipped: false, status: response.status, body: bodyText, providerId: null as string | null };
+
+    return {
+      ok: false,
+      skipped: false,
+      status: response.status,
+      body: bodyText,
+      providerId: null as string | null,
+    };
   }
 
   let providerId: string | null = null;
+
   try {
     const parsed = JSON.parse(bodyText);
     providerId = typeof parsed?.id === "string" ? parsed.id : null;
   } catch (_) {
-    // Resend accepted the email; provider id is optional for our log.
+    // Provider id is optional.
   }
 
   return { ok: true, skipped: false, providerId };
@@ -269,41 +321,58 @@ async function sendWhatsAppTemplate(to: string, variables: string[]) {
   const token = env("WHATSAPP_ACCESS_TOKEN");
   const phoneId = env("WHATSAPP_PHONE_NUMBER_ID");
   const template = env("WHATSAPP_TEMPLATE_NAME");
+
   if (!to || !token || !phoneId || !template) {
     return { ok: false, skipped: true, providerId: null as string | null };
   }
 
   const clean = normalizePhone(to);
-  const response = await fetch(`https://graph.facebook.com/v22.0/${phoneId}/messages`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to: clean,
-      type: "template",
-      template: {
-        name: template,
-        language: { code: env("WHATSAPP_TEMPLATE_LANGUAGE") || "es" },
-        components: [
-          {
-            type: "body",
-            parameters: variables.map((text) => ({ type: "text", text })),
-          },
-        ],
+
+  const response = await fetch(
+    `https://graph.facebook.com/v22.0/${phoneId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
-    }),
-  });
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: clean,
+        type: "template",
+        template: {
+          name: template,
+          language: {
+            code: env("WHATSAPP_TEMPLATE_LANGUAGE") || "es",
+          },
+          components: [
+            {
+              type: "body",
+              parameters: variables.map((text) => ({
+                type: "text",
+                text,
+              })),
+            },
+          ],
+        },
+      }),
+    },
+  );
 
   const bodyText = await response.text();
+
   if (!response.ok) {
     console.error("WhatsApp error", response.status, bodyText);
-    return { ok: false, skipped: false, providerId: null as string | null };
+
+    return {
+      ok: false,
+      skipped: false,
+      providerId: null as string | null,
+    };
   }
 
   let providerId: string | null = null;
+
   try {
     const parsed = JSON.parse(bodyText);
     providerId = parsed?.messages?.[0]?.id ?? null;
@@ -356,10 +425,18 @@ Deno.serve(async () => {
   const { data, error } = await supabase.rpc("maintenance_alert_candidates");
 
   if (error) {
-    return new Response(JSON.stringify({ ok: false, error: error.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        error: error.message,
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
   }
 
   let processed = 0;
@@ -375,23 +452,48 @@ Deno.serve(async () => {
     const theme = statusTheme(row.status);
     const lookup = row.email || row.phone || "";
     const lookupParam = row.email ? "correo" : "telefono";
-    const publicSiteUrl = env("PUBLIC_SITE_URL").replace(/\/$/, "");
-    const lookupLink = `${publicSiteUrl}/estado?${lookupParam}=${encodeURIComponent(lookup)}`;
-    const waMessage = `Hola Nexter Ingeniería, quiero agendar mantenimiento para mi ${row.brand} ${row.equipment_type} ubicado en ${row.location}. Mi nombre es ${row.full_name}.`;
-    const waLink = `https://wa.me/${normalizePhone(env("WHATSAPP_NUMBER"))}?text=${encodeURIComponent(waMessage)}`;
+    const siteUrl = publicSiteUrl();
+
+    const lookupLink = siteUrl
+      ? `${siteUrl}/estado?${lookupParam}=${encodeURIComponent(lookup)}`
+      : "#";
+
+    const waMessage =
+      `Hola Nexter Ingeniería, quiero agendar mantenimiento para mi ${row.brand} ${row.equipment_type} ubicado en ${row.location}. Mi nombre es ${row.full_name}.`;
+
+    const waLink =
+      `https://wa.me/${normalizePhone(env("WHATSAPP_NUMBER"))}?text=${encodeURIComponent(waMessage)}`;
 
     let rowDidWork = false;
 
-    // 1) CLIENTE - EMAIL: una vez en PROXIMO y una vez en VENCIDO por ciclo.
+    // CLIENTE - EMAIL
     if (row.email) {
       try {
-        const sent = await notificationAlreadySent(row.maintenance_service_id, row.status, "EMAIL", "CLIENT");
+        const sent = await notificationAlreadySent(
+          row.maintenance_service_id,
+          row.status,
+          "EMAIL",
+          "CLIENT",
+        );
+
         if (sent) {
           skippedAlreadySent++;
         } else {
-          const result = await sendEmail(row.email, theme.subject, clientEmailHtml(row, lookupLink, waLink));
+          const result = await sendEmail(
+            row.email,
+            theme.subject,
+            clientEmailHtml(row, lookupLink, waLink),
+          );
+
           if (result.ok) {
-            await markNotificationSent({ row, channel: "EMAIL", target: "CLIENT", recipient: row.email, providerId: result.providerId });
+            await markNotificationSent({
+              row,
+              channel: "EMAIL",
+              target: "CLIENT",
+              recipient: row.email,
+              providerId: result.providerId,
+            });
+
             clientEmailsSent++;
             rowDidWork = true;
           } else if (!result.skipped) {
@@ -399,40 +501,84 @@ Deno.serve(async () => {
           }
         }
       } catch (e) {
-        errors.push(`Cliente ${row.full_name}: ${e instanceof Error ? e.message : String(e)}`);
+        errors.push(
+          `Cliente ${row.full_name}: ${
+            e instanceof Error ? e.message : String(e)
+          }`,
+        );
       }
     }
 
-    // 2) CLIENTE - WHATSAPP: queda preparado; solo envía si Meta Cloud API está configurada.
+    // CLIENTE - WHATSAPP
     if (row.phone) {
       try {
-        const sent = await notificationAlreadySent(row.maintenance_service_id, row.status, "WHATSAPP", "CLIENT");
+        const sent = await notificationAlreadySent(
+          row.maintenance_service_id,
+          row.status,
+          "WHATSAPP",
+          "CLIENT",
+        );
+
         if (sent) {
           skippedAlreadySent++;
         } else {
-          const result = await sendWhatsAppTemplate(row.phone, [row.full_name, `${row.brand} ${row.equipment_type}`, row.location, theme.label]);
+          const result = await sendWhatsAppTemplate(row.phone, [
+            row.full_name,
+            `${row.brand} ${row.equipment_type}`,
+            row.location,
+            theme.label,
+          ]);
+
           if (result.ok) {
-            await markNotificationSent({ row, channel: "WHATSAPP", target: "CLIENT", recipient: row.phone, providerId: result.providerId });
+            await markNotificationSent({
+              row,
+              channel: "WHATSAPP",
+              target: "CLIENT",
+              recipient: row.phone,
+              providerId: result.providerId,
+            });
+
             clientWhatsAppsSent++;
             rowDidWork = true;
           }
         }
       } catch (e) {
-        errors.push(`WhatsApp cliente ${row.full_name}: ${e instanceof Error ? e.message : String(e)}`);
+        errors.push(
+          `WhatsApp cliente ${row.full_name}: ${
+            e instanceof Error ? e.message : String(e)
+          }`,
+        );
       }
     }
 
-    // 3) ADMIN - EMAIL: solo cuando el mantenimiento ya está VENCIDO.
-    // En PROXIMO se envía únicamente el recordatorio al cliente para evitar dos correos del mismo estado.
+    // ADMIN - EMAIL: solo VENCIDO
     if (row.status === "VENCIDO" && env("TECHNICIAN_EMAIL")) {
       try {
-        const sent = await notificationAlreadySent(row.maintenance_service_id, row.status, "EMAIL", "ADMIN");
+        const sent = await notificationAlreadySent(
+          row.maintenance_service_id,
+          row.status,
+          "EMAIL",
+          "ADMIN",
+        );
+
         if (sent) {
           skippedAlreadySent++;
         } else {
-          const result = await sendEmail(env("TECHNICIAN_EMAIL"), `Nexter Ingeniería | ${theme.label}: ${row.full_name}`, adminEmailHtml(row));
+          const result = await sendEmail(
+            env("TECHNICIAN_EMAIL"),
+            `Nexter Ingeniería | ${theme.label}: ${row.full_name}`,
+            adminEmailHtml(row),
+          );
+
           if (result.ok) {
-            await markNotificationSent({ row, channel: "EMAIL", target: "ADMIN", recipient: env("TECHNICIAN_EMAIL"), providerId: result.providerId });
+            await markNotificationSent({
+              row,
+              channel: "EMAIL",
+              target: "ADMIN",
+              recipient: env("TECHNICIAN_EMAIL"),
+              providerId: result.providerId,
+            });
+
             adminEmailsSent++;
             rowDidWork = true;
           } else if (!result.skipped) {
@@ -440,26 +586,53 @@ Deno.serve(async () => {
           }
         }
       } catch (e) {
-        errors.push(`Admin ${row.full_name}: ${e instanceof Error ? e.message : String(e)}`);
+        errors.push(
+          `Admin ${row.full_name}: ${
+            e instanceof Error ? e.message : String(e)
+          }`,
+        );
       }
     }
 
-    // 4) ADMIN - WHATSAPP: solo cuando el mantenimiento ya está VENCIDO.
+    // ADMIN - WHATSAPP: solo VENCIDO
     if (row.status === "VENCIDO" && env("ADMIN_WHATSAPP")) {
       try {
-        const sent = await notificationAlreadySent(row.maintenance_service_id, row.status, "WHATSAPP", "ADMIN");
+        const sent = await notificationAlreadySent(
+          row.maintenance_service_id,
+          row.status,
+          "WHATSAPP",
+          "ADMIN",
+        );
+
         if (sent) {
           skippedAlreadySent++;
         } else {
-          const result = await sendWhatsAppTemplate(env("ADMIN_WHATSAPP"), [row.full_name, `${row.brand} ${row.equipment_type}`, row.location, theme.label]);
+          const result = await sendWhatsAppTemplate(env("ADMIN_WHATSAPP"), [
+            row.full_name,
+            `${row.brand} ${row.equipment_type}`,
+            row.location,
+            theme.label,
+          ]);
+
           if (result.ok) {
-            await markNotificationSent({ row, channel: "WHATSAPP", target: "ADMIN", recipient: env("ADMIN_WHATSAPP"), providerId: result.providerId });
+            await markNotificationSent({
+              row,
+              channel: "WHATSAPP",
+              target: "ADMIN",
+              recipient: env("ADMIN_WHATSAPP"),
+              providerId: result.providerId,
+            });
+
             adminWhatsAppsSent++;
             rowDidWork = true;
           }
         }
       } catch (e) {
-        errors.push(`WhatsApp admin ${row.full_name}: ${e instanceof Error ? e.message : String(e)}`);
+        errors.push(
+          `WhatsApp admin ${row.full_name}: ${
+            e instanceof Error ? e.message : String(e)
+          }`,
+        );
       }
     }
 
@@ -478,6 +651,10 @@ Deno.serve(async () => {
       adminWhatsAppsSent,
       errors,
     }),
-    { headers: { "Content-Type": "application/json" } },
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
   );
 });

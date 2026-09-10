@@ -530,151 +530,268 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: "#fff", fontFamily: "Inter, sans-serif" }}>
 
                         {/* ── HEADER ── */}
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-100 bg-white">
-        <div className="mx-auto flex h-[92px] max-w-[1672px] items-center justify-between px-[5.5%]">
-          <a href="#inicio" className="flex shrink-0 items-center">
-            <img
-              src="/nexter-logo-master.png"
-              alt="Nexter Ingeniería"
-              className="h-[60px] w-auto object-contain"
-            />
-          </a>
+      
 
-          <nav className="hidden items-center gap-[38px] text-[16px] font-semibold text-[#0b2a56] lg:flex">
-            <a href="#inicio" className="transition-colors hover:text-[#168df0]">Inicio</a>
-            <a href="#servicios" className="transition-colors hover:text-[#168df0]">Servicios</a>
-            <a href="#productos" className="transition-colors hover:text-[#168df0]">Productos</a>
-            <a href="#cotizador" className="transition-colors hover:text-[#168df0]">Cotizar</a>
-            <a href="#contacto" className="transition-colors hover:text-[#168df0]">Contacto</a>
-          </nav>
+<header className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur-xl">
+  <div className="mx-auto flex h-[82px] max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12">
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={scrollToQuoter}
-              className="hidden min-w-[260px] justify-center rounded-full bg-[#168df0] px-7 py-[14px] text-[16px] font-bold text-white shadow-[0_10px_26px_rgba(22,141,240,.23)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0b7edb] hover:shadow-[0_14px_32px_rgba(22,141,240,.30)] sm:inline-flex"
-            >
-              Solicitar cotización
-            </button>
+    <a
+      href="#inicio"
+      className="flex shrink-0 items-center gap-3"
+      aria-label="Nexter Ingeniería - Inicio"
+    >
+      <img
+        src="/nexter-mark.png"
+        alt="Nexter Ingeniería"
+        className="h-[46px] w-[52px] object-contain sm:h-[50px] sm:w-[58px]"
+      />
 
-            <button
-              type="button"
-              aria-label="Abrir menú"
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen((v) => !v)}
-              className="grid h-11 w-11 place-items-center rounded-xl border border-slate-200 text-slate-700 transition hover:bg-brand-50 lg:hidden"
-            >
-              <span className="text-xl leading-none">{menuOpen ? "×" : "☰"}</span>
-            </button>
-          </div>
+      <div className="leading-[0.9]">
+        <div className="text-[21px] font-black tracking-[-0.04em] text-[#0877d8] sm:text-[25px]">
+          Nexter
         </div>
+        <div className="text-[20px] font-black tracking-[-0.04em] text-[#ff6b16] sm:text-[23px]">
+          Ingeniería
+        </div>
+      </div>
+    </a>
 
-        {menuOpen && (
-          <div className="border-t border-slate-100 bg-white px-5 py-4 shadow-lg lg:hidden">
-            <nav className="mx-auto grid max-w-7xl gap-1 text-sm font-semibold text-slate-700">
-              {[
-                ["Inicio", "#inicio"],
-                ["Servicios", "#servicios"],
-                ["Productos", "#productos"],
-                ["Cotizar", "#cotizador"],
-                ["Contacto", "#contacto"],
-              ].map(([label, href]) => (
-                <a
-                  key={href}
-                  href={href}
-                  onClick={() => setMenuOpen(false)}
-                  className="rounded-xl px-4 py-3 transition-colors hover:bg-brand-50 hover:text-brand-700"
-                >
-                  {label}
-                </a>
-              ))}
-              <button
-                onClick={() => { setMenuOpen(false); scrollToQuoter(); }}
-                className="mt-2 rounded-xl bg-[#168df0] px-4 py-3 font-bold text-white"
-              >
-                Solicitar cotización
-              </button>
-            </nav>
-          </div>
-        )}
-      </header>
+    <nav className="hidden items-center gap-8 lg:flex xl:gap-10">
+      <a href="#inicio" className="font-semibold text-[#092d5f] transition-colors hover:text-[#168fe8]">Inicio</a>
+      <a href="#servicios" className="font-semibold text-[#092d5f] transition-colors hover:text-[#168fe8]">Servicios</a>
+      <a href="#productos" className="font-semibold text-[#092d5f] transition-colors hover:text-[#168fe8]">Productos</a>
+      <a href="#cotizador" className="font-semibold text-[#092d5f] transition-colors hover:text-[#168fe8]">Cotizar</a>
+      <a href="#contacto" className="font-semibold text-[#092d5f] transition-colors hover:text-[#168fe8]">Contacto</a>
+    </nav>
+
+    <a
+      href="#cotizador"
+      className="hidden rounded-full bg-[#1d92e7] px-8 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-sky-200/60 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#087ed5] lg:inline-flex xl:px-10 xl:py-4 xl:text-[16px]"
+    >
+      Solicitar cotización
+    </a>
+
+    <details className="group relative lg:hidden">
+      <summary
+        className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white text-[#0b356d] shadow-sm transition hover:bg-sky-50 [&::-webkit-details-marker]:hidden"
+        aria-label="Abrir menú"
+      >
+        <span className="relative block h-5 w-6">
+          <span className="absolute left-0 top-0 h-[2px] w-6 rounded bg-current transition group-open:top-[9px] group-open:rotate-45" />
+          <span className="absolute left-0 top-[9px] h-[2px] w-6 rounded bg-current transition group-open:opacity-0" />
+          <span className="absolute bottom-0 left-0 h-[2px] w-6 rounded bg-current transition group-open:bottom-[9px] group-open:-rotate-45" />
+        </span>
+      </summary>
+
+      <div className="absolute right-0 top-[56px] w-[260px] overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 shadow-2xl shadow-slate-900/10">
+        <nav className="flex flex-col">
+          <a href="#inicio" className="rounded-xl px-4 py-3 font-semibold text-[#0b356d] hover:bg-sky-50 hover:text-[#168fe8]">Inicio</a>
+          <a href="#servicios" className="rounded-xl px-4 py-3 font-semibold text-[#0b356d] hover:bg-sky-50 hover:text-[#168fe8]">Servicios</a>
+          <a href="#productos" className="rounded-xl px-4 py-3 font-semibold text-[#0b356d] hover:bg-sky-50 hover:text-[#168fe8]">Productos</a>
+          <a href="#cotizador" className="rounded-xl px-4 py-3 font-semibold text-[#0b356d] hover:bg-sky-50 hover:text-[#168fe8]">Cotizar</a>
+          <a href="#contacto" className="rounded-xl px-4 py-3 font-semibold text-[#0b356d] hover:bg-sky-50 hover:text-[#168fe8]">Contacto</a>
+        </nav>
+
+        <a
+          href="#cotizador"
+          className="mt-2 flex items-center justify-center rounded-xl bg-[#1d92e7] px-4 py-3 font-bold text-white hover:bg-[#087ed5]"
+        >
+          Solicitar cotización
+        </a>
+      </div>
+    </details>
+
+  </div>
+</header>
 
       {/* ── HERO ── */}
-      <section id="inicio" className="relative overflow-hidden bg-white pt-[92px]">
-        <div className="relative mx-auto max-w-[1672px]">
-          <div className="relative min-h-[445px] lg:min-h-[455px]">
-            <div className="absolute inset-y-0 right-0 hidden w-[54%] overflow-hidden lg:block">
-              <img
-                src="/nexter-hero-master.webp"
-                alt="Aire acondicionado inverter Nexter Ingeniería"
-                className="h-[92%] w-[92%] object-contain object-right-top ml-auto mt-3"
-                    style={{
-                    width: "128%",
-                    maxWidth: "none",
-                    marginLeft: "-28%",
-                    marginRight: "0",
-                    objectPosition: "right center",
-                    clipPath: "inset(0 0 0 13%)",
-                  }}
-                  />
-              <div className="absolute inset-y-0 left-0 w-[28%] bg-gradient-to-r from-white via-white/80 to-transparent" />
-            </div>
+      
 
-            <div className="relative z-10 mx-auto grid min-h-[455px] max-w-[1672px] items-center px-[5.8%] lg:grid-cols-[46%_54%]">
-              <div className="max-w-[650px] pb-3">
-                <h1 className="font-[Outfit,sans-serif] text-[50px] font-900 leading-[.96] tracking-[-.045em] text-[#08285a] sm:text-[60px] lg:text-[70px]">
-                  Climatización
-                  <br />
-                  que impulsa
-                  <br />
-                  <span className="text-[#f97316]">tu negocio</span>
-                </h1>
 
-                <p className="mt-7 max-w-[590px] text-[17px] leading-[1.5] text-[#526b8c] sm:text-[20px]">
-                  Soluciones de climatización, mantenimiento y servicio técnico para hogares,
-                  comercios e industrias en toda la República Dominicana.
-                </p>
 
-                <button
-                  onClick={scrollToQuoter}
-                  className="mt-7 inline-flex min-w-[360px] items-center justify-between rounded-full bg-[#168df0] px-8 py-[17px] text-[20px] font-bold text-white shadow-[0_10px_24px_rgba(22,141,240,.24)] transition-all duration-200 hover:-translate-y-1 hover:bg-[#0b7edb] max-sm:min-w-0 max-sm:w-full"
-                >
-                  <span>Solicitar cotización</span>
-                  <span className="text-[30px] font-light leading-none">→</span>
-                </button>
-              </div>
 
-              <div className="mt-8 lg:hidden">
-                <img
-                  src="/nexter-hero-master.webp"
-                  alt="Aire acondicionado inverter Nexter Ingeniería"
-                  className="w-full rounded-[26px] object-cover shadow-xl"
-                />
-              </div>
-            </div>
+
+<section id="inicio" className="relative overflow-hidden bg-white">
+
+  <div className="relative border-b border-slate-100">
+
+    {/* IMAGEN DESKTOP: mas compacta, conservando margen superior e inferior */}
+    <div className="pointer-events-none absolute bottom-3 top-3 hidden overflow-hidden lg:block" style={{ left: "45%", right: "0" }}>
+      <img
+        src="/nexter-hero-approved.png"
+        alt="Aire acondicionado Inverter"
+        className="absolute inset-0 h-full w-full object-cover object-center"
+        style={{
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.30) 7%, rgba(0,0,0,0.78) 20%, black 34%, black 100%)",
+          maskImage:
+            "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.30) 7%, rgba(0,0,0,0.78) 20%, black 34%, black 100%)",
+        }}
+      />
+
+      <div
+        className="absolute inset-y-0 left-0 z-10 w-[30%]"
+        style={{
+          background:
+            "linear-gradient(90deg, #ffffff 0%, rgba(255,255,255,0.96) 22%, rgba(255,255,255,0.65) 52%, rgba(255,255,255,0.14) 84%, rgba(255,255,255,0) 100%)",
+        }}
+      />
+    </div>
+
+    {/* HERO MAS BAJO PARA QUE LOS BENEFICIOS ENTREN EN EL PRIMER VIEWPORT */}
+    <div className="relative z-20 mx-auto grid min-h-[455px] max-w-[1440px] items-center px-5 sm:px-8 lg:grid-cols-[45%_55%] lg:px-12">
+
+      <div className="py-7 sm:py-8 lg:py-6">
+        <h1 className="max-w-[600px] font-[Outfit,sans-serif] text-[44px] font-black leading-[0.98] tracking-[-0.045em] text-[#0b356d] sm:text-[54px] lg:text-[61px]">
+          Climatización
+          <br />
+          que impulsa
+          <br />
+          <span className="text-[#ff6715]">tu negocio</span>
+        </h1>
+
+        <p className="mt-6 max-w-[585px] text-[17px] leading-[1.58] text-slate-600 sm:text-[18px] lg:text-[18px]">
+          Soluciones de climatización, mantenimiento y servicio técnico
+          para hogares, comercios e industrias en toda la República Dominicana.
+        </p>
+
+        <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
+
+          <button
+            type="button"
+            onClick={scrollToQuoter}
+            className="inline-flex w-full items-center justify-between rounded-full bg-[#1596e8] px-7 py-[15px] text-[16px] font-bold text-white shadow-[0_12px_28px_rgba(21,150,232,0.20)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#087fd2] sm:w-auto sm:min-w-[290px]"
+          >
+            <span className="flex items-center gap-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-5 w-5" aria-hidden="true">
+                <path d="M6 2.75h8l4 4V21.25H6z" />
+                <path d="M14 2.75v4h4" />
+                <path d="M9 12h6M9 16h4" />
+              </svg>
+              Solicitar cotización
+            </span>
+
+            <span className="text-[22px] leading-none">→</span>
+          </button>
+
+          <a href="#servicios" className="flex items-center gap-4 text-[#0b356d]">
+            <span className="grid h-[48px] w-[48px] shrink-0 place-items-center rounded-full border-2 border-[#dcedf9] bg-white text-[#1596e8] shadow-sm">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="ml-0.5 h-4 w-4" aria-hidden="true">
+                <path d="M8.2 5.5v13l10-6.5z" />
+              </svg>
+            </span>
+
+            <span className="text-[15px] font-bold leading-5">
+              Conoce nuestros<br />servicios
+            </span>
+          </a>
+
+        </div>
+      </div>
+
+      <div aria-hidden="true" className="hidden lg:block" />
+    </div>
+
+    {/* MOVIL / TABLET */}
+    <div className="relative h-[240px] overflow-hidden sm:h-[300px] lg:hidden">
+      <img
+        src="/nexter-hero-approved.png"
+        alt="Aire acondicionado Inverter"
+        className="absolute inset-0 h-full w-full object-cover object-center"
+      />
+
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[26%]"
+        style={{
+          background:
+            "linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.72) 36%, rgba(255,255,255,0) 100%)",
+        }}
+      />
+    </div>
+  </div>
+
+  {/* BENEFICIOS COMPACTOS Y COMPLETAMENTE VISIBLES */}
+  <div className="relative z-30 bg-white">
+    <div className="mx-auto max-w-[1440px] px-5 py-3 sm:px-8 lg:px-12">
+      <div className="grid gap-0 sm:grid-cols-2 lg:grid-cols-4">
+
+        <div className="flex min-h-[102px] items-center gap-4 border-b border-slate-100 py-3 sm:border-b-0 lg:border-r lg:border-slate-200 lg:pr-6">
+          <div className="grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full bg-[#eaf6ff] text-[#1497eb]">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7">
+              <path d="M14.7 6.3a4.8 4.8 0 0 0-6.2 6.2L3 18l3 3 5.5-5.5a4.8 4.8 0 0 0 6.2-6.2l-3 3-3-3z" />
+            </svg>
           </div>
 
-          <div className="relative z-20 -mt-1 border-t border-slate-50 bg-white">
-            <div className="mx-auto grid max-w-[1672px] gap-5 px-[5.8%] py-[14px] sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
-              {[
-                ["Servicio técnico", "especializado", <IconWrench size={25} />],
-                ["Mantenimiento", "preventivo", <IconHome size={25} />],
-                ["Equipos y repuestos", "originales", <IconGear size={25} />],
-                ["Atención en", "toda RD", <IconMapPin size={25} />],
-              ].map(([title, subtitle, icon]) => (
-                <div key={String(title)} className="flex min-w-0 items-center gap-5">
-                  <div className="grid h-[64px] w-[64px] shrink-0 place-items-center rounded-full bg-[#e8f5ff] text-[#168df0]">
-                    {icon}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[17px] font-600 leading-[1.25] text-[#0b2a56]">{title}</div>
-                    <div className="mt-1 text-[17px] leading-[1.25] text-[#0b2a56]">{subtitle}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div>
+            <h3 className="text-[16px] font-extrabold leading-[1.3] text-[#0b356d]">
+              Servicio técnico<br />especializado
+            </h3>
+            <p className="mt-1.5 text-[13px] leading-[1.45] text-slate-500">
+              Diagnóstico y reparación<br />multimarca
+            </p>
           </div>
         </div>
-      </section>
+
+        <div className="flex min-h-[102px] items-center gap-4 border-b border-slate-100 py-3 sm:border-b-0 lg:border-r lg:border-slate-200 lg:px-6">
+          <div className="grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full bg-[#eaf6ff] text-[#1497eb]">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7">
+              <path d="M3 11.5 12 4l9 7.5" />
+              <path d="M5.5 10v10h13V10" />
+              <path d="M9.5 20v-6h5v6" />
+            </svg>
+          </div>
+
+          <div>
+            <h3 className="text-[16px] font-extrabold leading-[1.3] text-[#0b356d]">
+              Mantenimiento<br />preventivo
+            </h3>
+            <p className="mt-1.5 text-[13px] leading-[1.45] text-slate-500">
+              Mayor vida útil y<br />eficiencia energética
+            </p>
+          </div>
+        </div>
+
+        <div className="flex min-h-[102px] items-center gap-4 border-b border-slate-100 py-3 sm:border-b-0 lg:border-r lg:border-slate-200 lg:px-6">
+          <div className="grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full bg-[#eaf6ff] text-[#1497eb]">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.8-1L14.4 3h-4.8L9.3 6a7 7 0 0 0-1.8 1L5.1 6 3.1 9.4l2 1.6a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.8 1l.3 3h4.8l.3-3a7 7 0 0 0 1.8-1l2.4 1 2-3.4-2-1.6a7 7 0 0 0 .1-1z" />
+            </svg>
+          </div>
+
+          <div>
+            <h3 className="text-[16px] font-extrabold leading-[1.3] text-[#0b356d]">
+              Equipos y repuestos<br />originales
+            </h3>
+            <p className="mt-1.5 text-[13px] leading-[1.45] text-slate-500">
+              Las mejores marcas<br />del mercado
+            </p>
+          </div>
+        </div>
+
+        <div className="flex min-h-[102px] items-center gap-4 py-3 lg:pl-6">
+          <div className="grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full bg-[#eaf6ff] text-[#1497eb]">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7">
+              <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0z" />
+              <circle cx="12" cy="10" r="2.5" />
+            </svg>
+          </div>
+
+          <div>
+            <h3 className="text-[16px] font-extrabold leading-[1.3] text-[#0b356d]">
+              Atención en<br />toda RD
+            </h3>
+            <p className="mt-1.5 text-[13px] leading-[1.45] text-slate-500">
+              Santo Domingo y<br />zonas regionales
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</section>
 
 {/* ── SERVICIOS ── */}
       <section id="servicios" className="bg-[#f7fbff] py-20">
