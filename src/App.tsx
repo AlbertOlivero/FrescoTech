@@ -24,6 +24,7 @@ type ServiceType = "installation" | "maintenance" | null;
 type Step = 1 | 2 | 3;
 
 interface InstallData {
+  installationMode: string;
   acType: string;
   btu: string;
   quantity: number;
@@ -46,91 +47,6 @@ interface ContactData {
   zone: string;
 }
 
-interface QuoteResult {
-  materialsMin: number;
-  materialsMax: number;
-  laborMin: number;
-  laborMax: number;
-  materials: string[];
-}
-
-// ─── Pricing Logic ────────────────────────────────────────────────────────────
-
-const BTU_MATERIALS: Record<string, [number, number]> = {
-  "9000": [4200, 5800],
-  "12000": [5200, 7000],
-  "18000": [7000, 9500],
-  "24000": [9500, 13000],
-  "nosé": [5200, 13000],
-};
-
-const DISTANCE_SURCHARGE: Record<string, [number, number]> = {
-  "menos3": [0, 0],
-  "3a6": [900, 1400],
-  "mas6": [1800, 2800],
-};
-
-const AC_LABOR: Record<string, [number, number]> = {
-  "Split": [3500, 4500],
-  "Ventana": [2800, 3800],
-  "Inverter": [4000, 5500],
-  "Central": [7500, 12000],
-  "No sé": [3500, 12000],
-};
-
-const MAINT_BASE: [number, number] = [1500, 2200];
-const MAINT_SYMPTOM_EXTRA: [number, number] = [600, 1800];
-
-function calcInstallQuote(data: InstallData): QuoteResult {
-  const qty = Math.max(1, data.quantity);
-  const btuRange = BTU_MATERIALS[data.btu] ?? BTU_MATERIALS["nosé"];
-  const distRange = DISTANCE_SURCHARGE[data.distance] ?? [0, 0];
-  const laborRange = AC_LABOR[data.acType] ?? AC_LABOR["No sé"];
-
-  const matMin = (btuRange[0] + distRange[0]) * qty;
-  const matMax = (btuRange[1] + distRange[1]) * qty;
-  const labMin = laborRange[0] * qty;
-  const labMax = laborRange[1] * qty;
-
-  const mats: string[] = [];
-  if (data.btu !== "nosé") {
-    if (parseInt(data.btu) <= 12000) mats.push("Tubería de cobre 1/4\" y 3/8\"");
-    else mats.push("Tubería de cobre 3/8\" y 5/8\"");
-  } else {
-    mats.push("Tubería de cobre (calibre según unidad)");
-  }
-  mats.push("Cable eléctrico calibre 12 AWG");
-  mats.push("Gas refrigerante R-410A");
-  mats.push("Soportes y herrajes de montaje");
-  mats.push("Breaker termomagnético");
-  if (data.distance === "mas6") mats.push("Extensión de tubería adicional");
-  mats.push("Canaleta plástica de acabado");
-
-  return { materialsMin: matMin, materialsMax: matMax, laborMin: labMin, laborMax: labMax, materials: mats };
-}
-
-function calcMaintQuote(data: MaintData): QuoteResult {
-  const qty = Math.max(1, data.quantity);
-  const hasSymptoms = data.symptoms.filter(s => s !== "mantenimiento").length > 0;
-  const labMin = MAINT_BASE[0] * qty + (hasSymptoms ? MAINT_SYMPTOM_EXTRA[0] : 0);
-  const labMax = MAINT_BASE[1] * qty + (hasSymptoms ? MAINT_SYMPTOM_EXTRA[1] : 0);
-  const matMin = 600 * qty;
-  const matMax = 1200 * qty;
-
-  const mats = [
-    "Líquido desengrasante especial",
-    "Limpieza de filtros y evaporador",
-    "Revisión de gas refrigerante",
-    "Revisión eléctrica y de compresor",
-  ];
-  if (hasSymptoms) mats.push("Diagnóstico y reparación de fallas detectadas");
-
-  return { materialsMin: matMin, materialsMax: matMax, laborMin: labMin, laborMax: labMax, materials: mats };
-}
-
-function fmtRD(n: number) {
-  return `RD$${n.toLocaleString("es-DO")}`;
-}
 
 // ─── Icons (inline SVG) ───────────────────────────────────────────────────────
 
@@ -207,6 +123,29 @@ const IconInstagram = ({ size = 20, className = "" }) => (
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const WA_NUMBER = BUSINESS.whatsappInternational;
+
+const INSTALLATION_OPTIONS = [
+  {
+    value: "basica",
+    title: "Instalación básica",
+    description: "Instalación estándar para un equipo en una ubicación preparada.",
+  },
+  {
+    value: "extendida",
+    title: "Instalación con materiales extendidos",
+    description: "Para trabajos que requieren tubería, cableado, soportes u otros materiales adicionales.",
+  },
+  {
+    value: "reubicacion",
+    title: "Reubicación de equipo",
+    description: "Desinstalación y nueva instalación del equipo en otra ubicación.",
+  },
+  {
+    value: "varias",
+    title: "Instalación de varias unidades",
+    description: "Para instalar dos o más equipos en una residencia, comercio u oficina.",
+  },
+] as const;
 
 const SYMPTOMS = [
   { value: "no_enfria", label: "No enfría bien" },
@@ -405,7 +344,7 @@ export default function App() {
   const [step, setStep] = useState<Step>(1);
   const [serviceType, setServiceType] = useState<ServiceType>(null);
   const [installData, setInstallData] = useState<InstallData>({
-    acType: "", btu: "", quantity: 1, distance: "", description: ""
+    installationMode: "", acType: "", btu: "", quantity: 1, distance: "", description: ""
   });
   const [maintData, setMaintData] = useState<MaintData>({
     acType: "", quantity: 1, lastMaint: "", symptoms: [], description: ""
@@ -414,7 +353,6 @@ export default function App() {
     name: "", email: "", whatsapp: "", zone: ""
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [quote, setQuote] = useState<QuoteResult | null>(null);
 
   const quoterRef = useRef<HTMLDivElement>(null);
 
@@ -425,6 +363,7 @@ export default function App() {
   function validateStep2(): boolean {
     const e: Record<string, string> = {};
     if (serviceType === "installation") {
+      if (!installData.installationMode) e.installationMode = "Selecciona el tipo de instalación";
       if (!installData.acType) e.acType = "Selecciona el tipo de aire";
       if (!installData.btu) e.btu = "Selecciona la capacidad";
       if (!installData.distance) e.distance = "Selecciona la distancia";
@@ -449,10 +388,6 @@ export default function App() {
 
   function handleStep2Next() {
     if (!validateStep2()) return;
-    const result = serviceType === "installation"
-      ? calcInstallQuote(installData)
-      : calcMaintQuote(maintData);
-    setQuote(result);
     setStep(3);
     setTimeout(() => quoterRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
   }
@@ -464,6 +399,10 @@ export default function App() {
     lines.push(`📋 *Servicio:* ${serviceType === "installation" ? "Instalación nueva" : "Mantenimiento"}`);
 
     if (serviceType === "installation") {
+      const installationLabel =
+        INSTALLATION_OPTIONS.find(option => option.value === installData.installationMode)?.title ??
+        "No especificado";
+      lines.push(`🛠️ *Tipo de instalación:* ${installationLabel}`);
       lines.push(`❄️ *Tipo de aire:* ${installData.acType || "No especificado"}`);
       lines.push(`⚡ *Capacidad BTU:* ${installData.btu !== "nosé" ? installData.btu + " BTU" : "Por definir"}`);
       lines.push(`🔢 *Cantidad de unidades:* ${installData.quantity}`);
@@ -486,16 +425,6 @@ export default function App() {
       lines.push(`🔍 *Síntomas:* ${symLabels.join(", ")}`);
       if (maintData.description) lines.push(`💬 *Detalles:* ${maintData.description}`);
     }
-
-    if (quote) {
-      lines.push("─────────────────────────────");
-      lines.push("💰 *COTIZACIÓN ESTIMADA*");
-      lines.push(`🔩 Materiales: ${fmtRD(quote.materialsMin)} – ${fmtRD(quote.materialsMax)}`);
-      lines.push(`👨‍🔧 Mano de obra: ${fmtRD(quote.laborMin)} – ${fmtRD(quote.laborMax)}`);
-      lines.push(`📊 *Total estimado: ${fmtRD(quote.materialsMin + quote.laborMin)} – ${fmtRD(quote.materialsMax + quote.laborMax)}*`);
-      lines.push("⚠️ _Cotización preliminar, sujeta a inspección._");
-    }
-
     lines.push("─────────────────────────────");
     lines.push("👤 *DATOS DE CONTACTO*");
     lines.push(`Nombre: ${contact.name}`);
@@ -516,15 +445,11 @@ export default function App() {
   function resetQuoter() {
     setStep(1);
     setServiceType(null);
-    setInstallData({ acType: "", btu: "", quantity: 1, distance: "", description: "" });
+    setInstallData({ installationMode: "", acType: "", btu: "", quantity: 1, distance: "", description: "" });
     setMaintData({ acType: "", quantity: 1, lastMaint: "", symptoms: [], description: "" });
     setContact({ name: "", email: "", whatsapp: "", zone: "" });
     setErrors({});
-    setQuote(null);
   }
-
-  const totalMin = quote ? quote.materialsMin + quote.laborMin : 0;
-  const totalMax = quote ? quote.materialsMax + quote.laborMax : 0;
 
   return (
     <div style={{ minHeight: "100vh", background: "#fff", fontFamily: "Inter, sans-serif" }}>
@@ -571,7 +496,15 @@ export default function App() {
       Solicitar cotización
     </a>
 
-    <details className="group relative lg:hidden">
+    <details
+      className="group relative lg:hidden"
+      onClick={(event) => {
+        const target = event.target as HTMLElement;
+        if (target.closest("a")) {
+          event.currentTarget.removeAttribute("open");
+        }
+      }}
+    >
       <summary
         className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white text-[#0b356d] shadow-sm transition hover:bg-sky-50 [&::-webkit-details-marker]:hidden"
         aria-label="Abrir menú"
@@ -965,7 +898,7 @@ export default function App() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <h2 className="font-[Outfit,sans-serif] font-700 text-3xl sm:text-4xl text-slate-900 mb-3">Cotizador interactivo</h2>
-            <p className="text-slate-500 text-lg">Obtén un estimado al instante. Completa los pasos y te enviamos el detalle por WhatsApp.</p>
+            <p className="text-slate-500 text-lg">Completa los pasos y envíanos los detalles por WhatsApp para preparar tu cotización.</p>
           </div>
 
           <div className="bg-white rounded-3xl border-2 border-slate-100 shadow-xl p-6 sm:p-8">
@@ -1014,6 +947,45 @@ export default function App() {
             {step === 2 && serviceType === "installation" && (
               <div className="space-y-5">
                 <h3 className="font-[Outfit,sans-serif] font-700 text-xl text-slate-900 mb-2">Detalles de la instalación</h3>
+
+                <div>
+                  <Label required>Tipo de instalación</Label>
+                  <div className="space-y-3">
+                    {INSTALLATION_OPTIONS.map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setInstallData(d => ({ ...d, installationMode: option.value }))}
+                        className={`w-full rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
+                          installData.installationMode === option.value
+                            ? "border-brand-500 bg-brand-50 shadow-sm"
+                            : "border-slate-200 bg-white hover:border-brand-300 hover:bg-brand-50"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                              installData.installationMode === option.value
+                                ? "border-brand-500 bg-brand-500"
+                                : "border-slate-300 bg-white"
+                            }`}
+                          >
+                            {installData.installationMode === option.value && (
+                              <IconCheck size={11} className="text-white" />
+                            )}
+                          </div>
+                          <div>
+                            <span className="block font-semibold text-slate-900">{option.title}</span>
+                            <span className="mt-1 block text-sm leading-5 text-slate-500">{option.description}</span>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  {errors.installationMode && (
+                    <p className="mt-1 text-xs text-red-500">{errors.installationMode}</p>
+                  )}
+                </div>
 
                 <div>
                   <Label required>Tipo de aire acondicionado</Label>
@@ -1088,7 +1060,7 @@ export default function App() {
                     ← Atrás
                   </button>
                   <button type="button" onClick={handleStep2Next} className="flex-2 flex-grow py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm transition-all duration-200 active:scale-95">
-                    Ver mi cotización →
+                    Continuar →
                   </button>
                 </div>
               </div>
@@ -1178,55 +1150,15 @@ export default function App() {
                     ← Atrás
                   </button>
                   <button type="button" onClick={handleStep2Next} className="flex-grow py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm transition-all duration-200 active:scale-95">
-                    Ver mi cotización →
+                    Continuar →
                   </button>
                 </div>
               </div>
             )}
 
-            {/* STEP 3 — Quote + Contact */}
-            {step === 3 && quote && (
+            {/* STEP 3 — Contact */}
+            {step === 3 && (
               <div className="space-y-6">
-                {/* Quote result */}
-                <div className="bg-gradient-to-br from-brand-50 to-brand-100 rounded-2xl p-5 border border-brand-200">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center">
-                      <IconCheck size={16} className="text-white" />
-                    </div>
-                    <h3 className="font-[Outfit,sans-serif] font-700 text-lg text-brand-900">Cotización preliminar</h3>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between items-center py-2 border-b border-brand-200">
-                      <span className="text-sm text-slate-600">🔩 Materiales estimados</span>
-                      <span className="font-semibold text-slate-800 text-sm">{fmtRD(quote.materialsMin)} – {fmtRD(quote.materialsMax)}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-brand-200">
-                      <span className="text-sm text-slate-600">👨‍🔧 Mano de obra</span>
-                      <span className="font-semibold text-slate-800 text-sm">{fmtRD(quote.laborMin)} – {fmtRD(quote.laborMax)}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="font-[Outfit,sans-serif] font-700 text-slate-800">Total estimado</span>
-                      <span className="font-[Outfit,sans-serif] font-800 text-brand-700 text-lg">{fmtRD(totalMin)} – {fmtRD(totalMax)}</span>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <p className="text-xs font-semibold text-slate-600 mb-2">Incluye materiales estimados:</p>
-                    <ul className="space-y-1">
-                      {quote.materials.map(m => (
-                        <li key={m} className="flex items-start gap-2 text-xs text-slate-600">
-                          <IconCheck size={12} className="text-brand-500 mt-0.5 shrink-0" />
-                          {m}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
-                    ⚠️ <strong>Cotización preliminar.</strong> El precio final se confirma tras la inspección técnica gratuita en sitio.
-                  </div>
-                </div>
 
                 {/* Contact form */}
                 <div>
@@ -1283,7 +1215,9 @@ export default function App() {
                   className="w-full py-4 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-[Outfit,sans-serif] font-700 text-base transition-all duration-200 hover:shadow-xl hover:shadow-green-200 active:scale-95 flex items-center justify-center gap-3"
                 >
                   <IconWhatsApp size={22} />
-                  Enviar solicitud por WhatsApp
+                  {serviceType === "maintenance"
+                    ? "Solicitar cotización de mantenimiento por WhatsApp"
+                    : "Solicitar cotización de instalación por WhatsApp"}
                 </button>
                 <p className="text-center text-xs text-slate-400">
                   Se abrirá WhatsApp con el mensaje listo para enviar. Solo presiona "Enviar".
