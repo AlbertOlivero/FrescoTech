@@ -144,3 +144,17 @@
 *.stl                filter=lfs diff=lfs merge=lfs -text
 *.nc                 filter=lfs diff=lfs merge=lfs -text
 *.mat                filter=lfs diff=lfs merge=lfs -text
+
+# Nexter public assets: keep as regular Git files
+public/nexter-hero-approved.png -filter -diff -merge -text
+public/nexter-hero-exact.png -filter -diff -merge -text
+public/nexter-hero-master.webp -filter -diff -merge -text
+public/nexter-icon-exact.png -filter -diff -merge -text
+public/nexter-icon-master.png -filter -diff -merge -text
+public/nexter-icon.png -filter -diff -merge -text
+public/nexter-logo-exact.png -filter -diff -merge -text
+public/nexter-logo-footer-clean.png -filter -diff -merge -text
+public/nexter-logo-footer.png -filter -diff -merge -text
+public/nexter-logo-master.png -filter -diff -merge -text
+public/nexter-logo.png -filter -diff -merge -text
+public/nexter-mark.png -filter -diff -merge -text
