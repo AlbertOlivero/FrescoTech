@@ -51,7 +51,7 @@ function statusTheme(status: string) {
       label: "MANTENIMIENTO VENCIDO",
       eyebrow: "ALERTA DE MANTENIMIENTO",
       title: "Llegó la fecha de tu mantenimiento",
-      subject: "FrescoTech RD | Llegó la fecha de tu mantenimiento ❄️",
+      subject: "Nexter Ingeniería | Llegó la fecha de tu mantenimiento ❄️",
       description:
         "Tu equipo ya llegó a la fecha recomendada de mantenimiento. Te recomendamos agendar el servicio para mantener su buen rendimiento y prevenir averías.",
       badgeBg: "#fef2f2",
@@ -66,7 +66,7 @@ function statusTheme(status: string) {
     label: "PRÓXIMO A VENCER",
     eyebrow: "RECORDATORIO DE MANTENIMIENTO",
     title: "Tu próximo mantenimiento se acerca",
-    subject: "FrescoTech RD | Tu próximo mantenimiento se acerca 🔔",
+    subject: "Nexter Ingeniería | Tu próximo mantenimiento se acerca 🔔",
     description:
       "Tu equipo se está acercando a la fecha recomendada de mantenimiento. Puedes reservar con tiempo y elegir el día que mejor te convenga.",
     badgeBg: "#fffbeb",
@@ -81,7 +81,7 @@ function brandHeader() {
   const logoUrl = env("EMAIL_LOGO_URL").trim();
 
   const mark = logoUrl
-    ? `<img src="${escapeHtml(logoUrl)}" width="48" height="48" alt="FrescoTech RD" style="display:block;border:0;outline:none;text-decoration:none;border-radius:14px;object-fit:contain;background:#ffffff;" />`
+    ? `<img src="${escapeHtml(logoUrl)}" width="48" height="48" alt="Nexter Ingeniería" style="display:block;border:0;outline:none;text-decoration:none;border-radius:14px;object-fit:contain;background:#ffffff;" />`
     : `<div style="width:48px;height:48px;line-height:48px;text-align:center;border-radius:14px;background:#0ea5e9;color:#ffffff;font-size:24px;font-weight:700;">❄</div>`;
 
   return `
@@ -92,7 +92,7 @@ function brandHeader() {
             <tr>
               <td style="vertical-align:middle;padding-right:14px;">${mark}</td>
               <td style="vertical-align:middle;">
-                <div style="font-size:23px;line-height:28px;font-weight:800;color:#ffffff;letter-spacing:-0.3px;">FrescoTech <span style="color:#38bdf8;">RD</span></div>
+                <div style="font-size:23px;line-height:28px;font-weight:800;color:#ffffff;letter-spacing:-0.3px;">Nexter Ingeniería <span style="color:#38bdf8;">RD</span></div>
                 <div style="margin-top:3px;font-size:10px;line-height:14px;font-weight:700;color:#bae6fd;letter-spacing:2.1px;">CLIMATIZACIÓN · SERVICIO · MANTENIMIENTO</div>
               </td>
             </tr>
@@ -119,7 +119,7 @@ function clientEmailHtml(row: AlertRow, lookupLink: string, waLink: string) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${escapeHtml(theme.subject)}</title>
 </head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a;"><div style="text-align:center;padding:20px 0 12px"><img src="${PUBLIC_SITE_URL}/nexter-logo.png" alt="Nexter Ingeniería" width="280" style="max-width:80%;height:auto;display:inline-block;border:0" /></div>
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escapeHtml(theme.description)}</div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f1f5f9;">
     <tr>
@@ -189,7 +189,7 @@ function clientEmailHtml(row: AlertRow, lookupLink: string, waLink: string) {
           <tr>
             <td style="padding:18px 30px 30px;">
               <div style="border-top:1px solid #e2e8f0;padding-top:18px;text-align:center;font-size:12px;line-height:19px;color:#94a3b8;">
-                <strong style="color:#475569;">FrescoTech RD</strong><br />
+                <strong style="color:#475569;">Nexter Ingeniería</strong><br />
                 Instalación · Mantenimiento · Climatización<br />
                 Este mensaje fue generado como recordatorio de mantenimiento de tu equipo.
               </div>
@@ -377,7 +377,7 @@ Deno.serve(async () => {
     const lookupParam = row.email ? "correo" : "telefono";
     const publicSiteUrl = env("PUBLIC_SITE_URL").replace(/\/$/, "");
     const lookupLink = `${publicSiteUrl}/estado?${lookupParam}=${encodeURIComponent(lookup)}`;
-    const waMessage = `Hola FrescoTech RD, quiero agendar mantenimiento para mi ${row.brand} ${row.equipment_type} ubicado en ${row.location}. Mi nombre es ${row.full_name}.`;
+    const waMessage = `Hola Nexter Ingeniería, quiero agendar mantenimiento para mi ${row.brand} ${row.equipment_type} ubicado en ${row.location}. Mi nombre es ${row.full_name}.`;
     const waLink = `https://wa.me/${normalizePhone(env("WHATSAPP_NUMBER"))}?text=${encodeURIComponent(waMessage)}`;
 
     let rowDidWork = false;
@@ -430,7 +430,7 @@ Deno.serve(async () => {
         if (sent) {
           skippedAlreadySent++;
         } else {
-          const result = await sendEmail(env("TECHNICIAN_EMAIL"), `FrescoTech RD | ${theme.label}: ${row.full_name}`, adminEmailHtml(row));
+          const result = await sendEmail(env("TECHNICIAN_EMAIL"), `Nexter Ingeniería | ${theme.label}: ${row.full_name}`, adminEmailHtml(row));
           if (result.ok) {
             await markNotificationSent({ row, channel: "EMAIL", target: "ADMIN", recipient: env("TECHNICIAN_EMAIL"), providerId: result.providerId });
             adminEmailsSent++;

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import type { Session } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 import AdminShell from "./AdminShell";
@@ -80,25 +81,66 @@ export default function AdminApp() {
     },
   ]);
 
+  async function validateAdminSession(session: Session | null) {
+    if (!supabase || !session) {
+      setAuthenticated(false);
+      setSessionEmail("");
+      return false;
+    }
+
+    const { data: isAdmin, error } = await supabase.rpc("is_admin");
+
+    if (error || isAdmin !== true) {
+      setAuthenticated(false);
+      setSessionEmail("");
+      setAuthMessage(
+        error
+          ? "No se pudo verificar el acceso administrativo."
+          : "Esta cuenta no tiene permisos de administrador.",
+      );
+
+      await supabase.auth.signOut();
+      return false;
+    }
+
+    setAuthenticated(true);
+    setSessionEmail(session.user.email ?? "");
+    setAuthMessage("");
+    return true;
+  }
+
   useEffect(() => {
     if (!supabase) {
       setSessionReady(true);
       return;
     }
 
-    supabase.auth.getSession().then(({ data }) => {
-      setAuthenticated(Boolean(data.session));
-      setSessionEmail(data.session?.user.email ?? "");
-      setSessionReady(true);
+    let active = true;
+
+    void supabase.auth.getSession().then(async ({ data }) => {
+      try {
+        if (active) {
+          await validateAdminSession(data.session);
+        }
+      } finally {
+        if (active) setSessionReady(true);
+      }
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAuthenticated(Boolean(session));
-      setSessionEmail(session?.user.email ?? "");
-      setSessionReady(true);
+      window.setTimeout(() => {
+        if (!active) return;
+
+        void validateAdminSession(session).finally(() => {
+          if (active) setSessionReady(true);
+        });
+      }, 0);
     });
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -462,7 +504,7 @@ export default function AdminApp() {
 
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `frescotech-contabilidad-${periodDate}.csv`;
+    anchor.download = `nexter-ingenieria-contabilidad-${periodDate}.csv`;
     anchor.click();
 
     URL.revokeObjectURL(url);

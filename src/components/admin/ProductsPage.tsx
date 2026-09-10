@@ -70,7 +70,22 @@ export default function ProductsPage() {
       return;
     }
 
-    setProducts((data ?? []) as Product[]);
+    setProducts(
+        (data ?? []).map((row: any) => ({
+          id: row.id,
+          name: row.name,
+          category: row.category,
+          brand: row.brand,
+          btu: row.btu,
+          price: row.price == null ? null : Number(row.price),
+          description: row.description,
+          image: row.image,
+          published: row.published,
+          stock: row.stock,
+          created_at: row.created_at,
+          updated_at: row.created_at,
+        })),
+      );
   }
 
   function resetForm() {
@@ -456,6 +471,6 @@ export default function ProductsPage() {
           </div>
         </Card>
       </div>
-    </div>
+</div>
   );
 }

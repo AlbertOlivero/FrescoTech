@@ -1,11 +1,11 @@
 export const BUSINESS = {
-  name: "FrescoTech RD",
-  shortName: "FrescoTech",
+  name: "Nexter Ingeniería",
+  shortName: "Nexter Ingeniería",
   countrySuffix: "RD",
   phoneDisplay: "829-555-0000",
   phoneInternational: "+18295550000",
   whatsappInternational: "18295550000",
-  email: "servicio@frescotechrd.com",
+  email: "servicio@nexteringenieria.com",
   domain: "https://midominio.com",
   coverage: "Santo Domingo, Santiago, San Cristóbal, La Romana y zonas cercanas",
 } as const;

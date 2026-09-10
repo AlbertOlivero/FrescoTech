@@ -3,7 +3,6 @@ import {
   IconBell,
   IconEye,
   IconEyeOff,
-  IconSnowflake,
   IconUser,
   IconWrench,
 } from "./ui";
@@ -20,6 +19,39 @@ interface Props {
   signIn: (event: FormEvent) => void;
 }
 
+function BrandName({
+  compact = false,
+  dark = false,
+}: {
+  compact?: boolean;
+  dark?: boolean;
+}) {
+  return (
+    <div>
+      <div
+        className={[
+          "font-[Outfit,sans-serif] font-800 tracking-tight leading-none",
+          compact ? "text-xl" : "text-2xl sm:text-[1.7rem]",
+        ].join(" ")}
+      >
+        <span className={dark ? "text-sky-300" : "text-brand-700"}>Nexter</span>{" "}
+        <span className="text-orange-500">Ingeniería</span>
+      </div>
+
+      <div className="mt-2 flex items-center gap-1.5" aria-hidden="true">
+        <span
+          className={[
+            "h-1 rounded-full",
+            compact ? "w-10" : "w-12",
+            dark ? "bg-sky-300" : "bg-brand-600",
+          ].join(" ")}
+        />
+        <span className={["h-1 rounded-full bg-orange-500", compact ? "w-5" : "w-6"].join(" ")} />
+      </div>
+    </div>
+  );
+}
+
 export default function LoginView({
   email,
   password,
@@ -33,44 +65,48 @@ export default function LoginView({
 }: Props) {
   return (
     <div className="min-h-screen bg-slate-950 lg:grid lg:grid-cols-[1.08fr_.92fr]">
-      <section className="relative hidden min-h-screen overflow-hidden bg-gradient-to-br from-brand-900 via-brand-900 to-brand-700 px-14 py-12 text-white lg:flex">
+      <section className="relative hidden min-h-screen overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand-700 px-14 py-12 text-white lg:flex">
         <div
-          className="absolute inset-0 opacity-30"
+          className="absolute inset-0 opacity-40"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 15% 20%, rgba(56,189,248,.35), transparent 28%), radial-gradient(circle at 85% 72%, rgba(14,165,233,.25), transparent 32%)",
+              "radial-gradient(circle at 15% 20%, rgba(56,189,248,.34), transparent 28%), radial-gradient(circle at 86% 74%, rgba(249,115,22,.15), transparent 30%)",
           }}
         />
-        <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full border border-white/10" />
-        <div className="absolute -right-12 -top-12 h-56 w-56 rounded-full border border-white/10" />
+        <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full border border-sky-300/10" />
+        <div className="absolute -right-12 -top-12 h-56 w-56 rounded-full border border-orange-300/10" />
+        <div className="absolute bottom-0 left-0 h-1 w-2/3 bg-gradient-to-r from-sky-400 via-brand-500 to-orange-500 opacity-90" />
 
         <div className="relative z-10 flex w-full flex-col justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-500 shadow-xl shadow-brand-500/25">
-              <IconSnowflake size={23} />
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-16 shrink-0 items-center justify-center">
+              <img
+                src="/nexter-mark.png"
+                alt="Nexter Ingeniería"
+                className="h-14 w-16 object-contain"
+              />
             </div>
+
             <div>
-              <div className="font-[Outfit,sans-serif] text-xl font-800 leading-none">
-                FrescoTech RD
-              </div>
-              <div className="mt-1 text-xs uppercase tracking-[.18em] text-brand-200">
+              <BrandName compact dark />
+              <div className="mt-2 text-[11px] font-semibold uppercase tracking-[.2em] text-sky-100/70">
                 Panel administrativo
               </div>
             </div>
           </div>
 
           <div className="max-w-xl">
-            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-brand-400/30 bg-brand-400/10 px-4 py-2 text-sm text-brand-100">
+            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-white/[0.06] px-4 py-2 text-sm text-sky-100 backdrop-blur-sm">
               <IconUser size={16} /> Área privada y segura
             </div>
 
             <h1 className="font-[Outfit,sans-serif] text-5xl font-800 leading-[1.05] tracking-tight xl:text-6xl">
               Gestiona tus servicios
               <br />
-              <span className="text-brand-300">desde un solo lugar.</span>
+              <span className="text-sky-300">desde un solo lugar.</span>
             </h1>
 
-            <p className="mt-6 max-w-lg text-lg leading-relaxed text-brand-100/80">
+            <p className="mt-6 max-w-lg text-lg leading-relaxed text-sky-50/75">
               Clientes, equipos y mantenimientos organizados para que tengas el
               control de cada servicio y cada vencimiento.
             </p>
@@ -80,40 +116,50 @@ export default function LoginView({
                 { icon: <IconWrench size={19} />, label: "Servicios" },
                 { icon: <IconBell size={19} />, label: "Alertas" },
                 { icon: <IconUser size={19} />, label: "Acceso seguro" },
-              ].map((item) => (
+              ].map((item, index) => (
                 <div
                   key={item.label}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/10 hover:shadow-lg"
+                  className="rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-4 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/10 hover:shadow-lg"
                 >
-                  <div className="mb-2 text-brand-300">{item.icon}</div>
+                  <div className={index === 1 ? "mb-2 text-orange-400" : "mb-2 text-sky-300"}>
+                    {item.icon}
+                  </div>
                   <div className="text-sm font-semibold text-white">{item.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <p className="text-xs text-brand-200/60">
-            © {new Date().getFullYear()} FrescoTech RD · Sistema de gestión interna
+          <p className="text-xs text-sky-100/50">
+            © {new Date().getFullYear()} Nexter Ingeniería · Sistema de gestión interna
           </p>
         </div>
       </section>
 
-      <section className="flex min-h-screen items-center justify-center bg-slate-50 px-5 py-10 sm:px-8">
-        <form onSubmit={signIn} className="w-full max-w-md">
-          <div className="mb-10 flex items-center gap-3 lg:hidden">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-500 text-white">
-              <IconSnowflake size={22} />
+      <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-5 py-10 sm:px-8">
+        <div className="pointer-events-none absolute right-[-7rem] top-[-7rem] h-72 w-72 rounded-full bg-brand-100/60 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-[-7rem] left-[-5rem] h-64 w-64 rounded-full bg-orange-100/50 blur-3xl" />
+
+        <form onSubmit={signIn} className="relative z-10 w-full max-w-md">
+          <div className="mb-9 flex items-center gap-4">
+            <div className="flex h-14 w-16 shrink-0 items-center justify-center">
+              <img
+                src="/nexter-mark.png"
+                alt="Nexter Ingeniería"
+                className="h-14 w-16 object-contain"
+              />
             </div>
+
             <div>
-              <div className="font-[Outfit,sans-serif] text-xl font-800 text-slate-900">
-                FrescoTech RD
+              <BrandName compact />
+              <div className="mt-2 text-[11px] font-semibold uppercase tracking-[.18em] text-slate-400">
+                Panel administrativo
               </div>
-              <div className="text-xs text-slate-400">Panel administrativo</div>
             </div>
           </div>
 
           <div className="mb-8">
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 ring-1 ring-brand-100">
               <IconUser size={22} />
             </div>
 
@@ -137,7 +183,7 @@ export default function LoginView({
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                placeholder="admin@frescotechrd.com"
+                placeholder="admin@nexteringenieria.com"
                 className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-slate-900 shadow-sm outline-none transition-all duration-200 hover:border-brand-300 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10"
               />
             </div>

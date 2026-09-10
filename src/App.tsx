@@ -1,7 +1,22 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import CatalogSection from "@/components/catalog/CatalogSection";
 import StatusLookupSection from "@/components/maintenance/StatusLookupSection";
 import { BUSINESS, ZONES } from "@/config/business";
+
+import { supabase } from "./lib/supabase";
+
+type NexterPublicProduct = {
+  id: string;
+  name: string;
+  category: string | null;
+  brand: string | null;
+  btu: string | number | null;
+  price: number | null;
+  description: string | null;
+  image: string | null;
+  published: boolean | null;
+  stock: number | null;
+};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -280,7 +295,110 @@ function Select({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectEle
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
+
+function IconHome({ size = 24 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 11.5 12 4l9 7.5" />
+      <path d="M5.5 10.5V20h13v-9.5" />
+    </svg>
+  );
+}
+
+function IconGear({ size = 24 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.14.38.36.72.65 1 .29.28.66.46 1.05.5h.1v4h-.1c-.39.04-.76.22-1.05.5-.29.28-.51.62-.65 1Z" />
+    </svg>
+  );
+}
+
 export default function App() {
+
+  /* NEXTER_PRODUCT_QUOTE_MODAL_STATE */
+  const [selectedProduct, setSelectedProduct] = useState<NexterPublicProduct | null>(null);
+
+  const buildProductWhatsAppUrl = (product: NexterPublicProduct) => {
+    const priceText =
+      typeof product.price === "number"
+        ? new Intl.NumberFormat("es-DO", {
+            style: "currency",
+            currency: "DOP",
+            maximumFractionDigits: 0,
+          }).format(product.price)
+        : "Consultar precio";
+
+    const details = [
+      "Hola, quiero cotizar este producto de Nexter Ingeniería:",
+      "",
+      `Producto: ${product.name}`,
+      product.brand ? `Marca: ${product.brand}` : null,
+      product.category ? `Categoría: ${product.category}` : null,
+      product.btu ? `BTU: ${product.btu}` : null,
+      `Precio: ${priceText}`,
+      typeof product.stock === "number"
+        ? `Disponibilidad: ${product.stock > 0 ? product.stock + " unidad(es)" : "Agotado"}`
+        : null,
+      product.description ? `Descripción: ${product.description}` : null,
+      "",
+      "Me gustaría recibir información para realizar la cotización.",
+    ].filter(Boolean);
+
+    return `https://wa.me/18297082720?text=${encodeURIComponent(details.join("\n"))}`;
+  };
+
+
+  /* NEXTER_PUBLIC_PRODUCTS_QUERY */
+  const [publicProducts, setPublicProducts] = useState<NexterPublicProduct[]>([]);
+  const [publicProductsLoading, setPublicProductsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadPublicProducts = async () => {
+      setPublicProductsLoading(true);
+
+      const { data, error } = await supabase
+        .from("products")
+        .select("id,name,category,brand,btu,price,description,image,published,stock,created_at")
+        .eq("published", true)
+        .order("created_at", { ascending: false });
+
+      if (!active) return;
+
+      if (error) {
+        console.error("No se pudieron cargar los productos publicados:", error);
+        setPublicProducts([]);
+      } else {
+        setPublicProducts(
+          (data ?? []).map((row: any) => ({
+            id: row.id,
+            name: row.name,
+            category: row.category,
+            brand: row.brand,
+            btu: row.btu,
+            price: row.price == null ? null : Number(row.price),
+            description: row.description,
+            image: row.image,
+            published: row.published,
+            stock: row.stock,
+            created_at: row.created_at,
+
+          })),
+        );
+      }
+
+      setPublicProductsLoading(false);
+    };
+
+    loadPublicProducts();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Quoter state
@@ -341,7 +459,7 @@ export default function App() {
 
   function buildWAMessage(): string {
     const lines: string[] = [];
-    lines.push("🌬️ *SOLICITUD DE COTIZACIÓN — FrescoTech RD*");
+    lines.push("🌬️ *SOLICITUD DE COTIZACIÓN — Nexter Ingeniería*");
     lines.push("─────────────────────────────");
     lines.push(`📋 *Servicio:* ${serviceType === "installation" ? "Instalación nueva" : "Mantenimiento"}`);
 
@@ -411,191 +529,321 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: "#fff", fontFamily: "Inter, sans-serif" }}>
 
-      {/* ── HEADER ── */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-100 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-md">
-              <IconSnowflake size={18} className="text-white" />
-            </div>
-            <div>
-              <span className="font-[Outfit,sans-serif] font-800 text-lg leading-none text-slate-900">FrescoTech</span>
-              <span className="font-[Outfit,sans-serif] font-600 text-lg leading-none text-brand-500"> RD</span>
-            </div>
-          </div>
+                        {/* ── HEADER ── */}
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-100 bg-white">
+        <div className="mx-auto flex h-[92px] max-w-[1672px] items-center justify-between px-[5.5%]">
+          <a href="#inicio" className="flex shrink-0 items-center">
+            <img
+              src="/nexter-logo-master.png"
+              alt="Nexter Ingeniería"
+              className="h-[60px] w-auto object-contain"
+            />
+          </a>
 
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-            <a href="#servicios" className="hover:text-brand-600 transition-colors">Servicios</a>
-            <a href="#equipos" className="hover:text-brand-600 transition-colors">Equipos</a>
-            <a href="#cotizador" className="hover:text-brand-600 transition-colors">Cotizador</a>
-            <a href="#estado" className="hover:text-brand-600 transition-colors">Estado</a>
-            <a href="#testimonios" className="hover:text-brand-600 transition-colors">Testimonios</a>
+          <nav className="hidden items-center gap-[38px] text-[16px] font-semibold text-[#0b2a56] lg:flex">
+            <a href="#inicio" className="transition-colors hover:text-[#168df0]">Inicio</a>
+            <a href="#servicios" className="transition-colors hover:text-[#168df0]">Servicios</a>
+            <a href="#productos" className="transition-colors hover:text-[#168df0]">Productos</a>
+            <a href="#cotizador" className="transition-colors hover:text-[#168df0]">Cotizar</a>
+            <a href="#contacto" className="transition-colors hover:text-[#168df0]">Contacto</a>
           </nav>
 
-          <div className="flex items-center gap-3">
-            <a href={`tel:${BUSINESS.phoneInternational}`} className="hidden sm:flex items-center gap-1.5 text-sm text-slate-600 hover:text-brand-600 transition-colors">
-              <IconPhone size={15} />
-              <span className="font-medium">{BUSINESS.phoneDisplay}</span>
-            </a>
+          <div className="flex items-center gap-2">
             <button
               onClick={scrollToQuoter}
-              className="bg-accent-500 hover:bg-accent-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-accent-200 active:scale-95"
+              className="hidden min-w-[260px] justify-center rounded-full bg-[#168df0] px-7 py-[14px] text-[16px] font-bold text-white shadow-[0_10px_26px_rgba(22,141,240,.23)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0b7edb] hover:shadow-[0_14px_32px_rgba(22,141,240,.30)] sm:inline-flex"
             >
-              Cotiza ahora
+              Solicitar cotización
+            </button>
+
+            <button
+              type="button"
+              aria-label="Abrir menú"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((v) => !v)}
+              className="grid h-11 w-11 place-items-center rounded-xl border border-slate-200 text-slate-700 transition hover:bg-brand-50 lg:hidden"
+            >
+              <span className="text-xl leading-none">{menuOpen ? "×" : "☰"}</span>
             </button>
           </div>
         </div>
+
+        {menuOpen && (
+          <div className="border-t border-slate-100 bg-white px-5 py-4 shadow-lg lg:hidden">
+            <nav className="mx-auto grid max-w-7xl gap-1 text-sm font-semibold text-slate-700">
+              {[
+                ["Inicio", "#inicio"],
+                ["Servicios", "#servicios"],
+                ["Productos", "#productos"],
+                ["Cotizar", "#cotizador"],
+                ["Contacto", "#contacto"],
+              ].map(([label, href]) => (
+                <a
+                  key={href}
+                  href={href}
+                  onClick={() => setMenuOpen(false)}
+                  className="rounded-xl px-4 py-3 transition-colors hover:bg-brand-50 hover:text-brand-700"
+                >
+                  {label}
+                </a>
+              ))}
+              <button
+                onClick={() => { setMenuOpen(false); scrollToQuoter(); }}
+                className="mt-2 rounded-xl bg-[#168df0] px-4 py-3 font-bold text-white"
+              >
+                Solicitar cotización
+              </button>
+            </nav>
+          </div>
+        )}
       </header>
 
       {/* ── HERO ── */}
-      <section className="relative pt-16 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-900 via-brand-800 to-brand-600" />
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&h=700&fit=crop&auto=format')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-brand-900/30 to-brand-900/60" />
-
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-20 lg:py-28">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 bg-brand-500/20 border border-brand-400/30 rounded-full px-4 py-1.5 mb-6">
-                <IconSnowflake size={14} className="text-brand-300" />
-                <span className="text-brand-200 text-sm font-medium">Servicio profesional en RD</span>
-              </div>
-              <h1 className="font-[Outfit,sans-serif] font-800 text-4xl sm:text-5xl lg:text-6xl text-white leading-tight mb-5">
-                Instalación y<br />
-                <span className="text-brand-300">mantenimiento</span><br />
-                sin sorpresas
-              </h1>
-              <p className="text-brand-100 text-lg leading-relaxed mb-8 max-w-lg">
-                Aires acondicionados residenciales y comerciales. Cotización estimada al instante, precio final confirmado en inspección.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={scrollToQuoter}
-                  className="bg-accent-500 hover:bg-accent-400 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all duration-200 hover:shadow-xl hover:shadow-accent-500/30 active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <IconZap size={18} />
-                  Cotiza gratis ahora
-                </button>
-                <a
-                  href={`https://wa.me/${WA_NUMBER}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold px-7 py-4 rounded-2xl text-base transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  <IconWhatsApp size={18} />
-                  Escríbenos
-                </a>
-              </div>
+      <section id="inicio" className="relative overflow-hidden bg-white pt-[92px]">
+        <div className="relative mx-auto max-w-[1672px]">
+          <div className="relative min-h-[445px] lg:min-h-[455px]">
+            <div className="absolute inset-y-0 right-0 hidden w-[54%] overflow-hidden lg:block">
+              <img
+                src="/nexter-hero-master.webp"
+                alt="Aire acondicionado inverter Nexter Ingeniería"
+                className="h-[92%] w-[92%] object-contain object-right-top ml-auto mt-3"
+                    style={{
+                    width: "128%",
+                    maxWidth: "none",
+                    marginLeft: "-28%",
+                    marginRight: "0",
+                    objectPosition: "right center",
+                    clipPath: "inset(0 0 0 13%)",
+                  }}
+                  />
+              <div className="absolute inset-y-0 left-0 w-[28%] bg-gradient-to-r from-white via-white/80 to-transparent" />
             </div>
 
-            <div className="hidden lg:block">
-              <div className="relative">
-                <div className="absolute -inset-4 bg-brand-400/20 rounded-3xl blur-2xl" />
+            <div className="relative z-10 mx-auto grid min-h-[455px] max-w-[1672px] items-center px-[5.8%] lg:grid-cols-[46%_54%]">
+              <div className="max-w-[650px] pb-3">
+                <h1 className="font-[Outfit,sans-serif] text-[50px] font-900 leading-[.96] tracking-[-.045em] text-[#08285a] sm:text-[60px] lg:text-[70px]">
+                  Climatización
+                  <br />
+                  que impulsa
+                  <br />
+                  <span className="text-[#f97316]">tu negocio</span>
+                </h1>
+
+                <p className="mt-7 max-w-[590px] text-[17px] leading-[1.5] text-[#526b8c] sm:text-[20px]">
+                  Soluciones de climatización, mantenimiento y servicio técnico para hogares,
+                  comercios e industrias en toda la República Dominicana.
+                </p>
+
+                <button
+                  onClick={scrollToQuoter}
+                  className="mt-7 inline-flex min-w-[360px] items-center justify-between rounded-full bg-[#168df0] px-8 py-[17px] text-[20px] font-bold text-white shadow-[0_10px_24px_rgba(22,141,240,.24)] transition-all duration-200 hover:-translate-y-1 hover:bg-[#0b7edb] max-sm:min-w-0 max-sm:w-full"
+                >
+                  <span>Solicitar cotización</span>
+                  <span className="text-[30px] font-light leading-none">→</span>
+                </button>
+              </div>
+
+              <div className="mt-8 lg:hidden">
                 <img
-                  src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&h=500&fit=crop&auto=format"
-                  alt="Técnico de FrescoTech instalando aire acondicionado"
-                  className="relative rounded-3xl shadow-2xl object-cover w-full h-[420px] border border-white/10"
+                  src="/nexter-hero-master.webp"
+                  alt="Aire acondicionado inverter Nexter Ingeniería"
+                  className="w-full rounded-[26px] object-cover shadow-xl"
                 />
-                <div className="absolute -bottom-4 -left-4 bg-white rounded-2xl shadow-xl p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-brand-100 rounded-xl flex items-center justify-center">
-                    <IconCheck size={18} className="text-brand-600" />
-                  </div>
-                  <div>
-                    <div className="text-xs text-slate-500 font-medium">Instalaciones completadas</div>
-                    <div className="font-[Outfit,sans-serif] font-700 text-slate-900">+1,200 unidades</div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mt-16 pt-10 border-t border-white/10">
-            {[
-              { value: "8+", label: "Años de experiencia" },
-              { value: "1,200+", label: "Unidades instaladas" },
-              { value: "15", label: "Zonas de cobertura" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="font-[Outfit,sans-serif] font-800 text-3xl sm:text-4xl text-white mb-1">{stat.value}</div>
-                <div className="text-brand-200 text-sm">{stat.label}</div>
-              </div>
-            ))}
+          <div className="relative z-20 -mt-1 border-t border-slate-50 bg-white">
+            <div className="mx-auto grid max-w-[1672px] gap-5 px-[5.8%] py-[14px] sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+              {[
+                ["Servicio técnico", "especializado", <IconWrench size={25} />],
+                ["Mantenimiento", "preventivo", <IconHome size={25} />],
+                ["Equipos y repuestos", "originales", <IconGear size={25} />],
+                ["Atención en", "toda RD", <IconMapPin size={25} />],
+              ].map(([title, subtitle, icon]) => (
+                <div key={String(title)} className="flex min-w-0 items-center gap-5">
+                  <div className="grid h-[64px] w-[64px] shrink-0 place-items-center rounded-full bg-[#e8f5ff] text-[#168df0]">
+                    {icon}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[17px] font-600 leading-[1.25] text-[#0b2a56]">{title}</div>
+                    <div className="mt-1 text-[17px] leading-[1.25] text-[#0b2a56]">{subtitle}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── SERVICIOS ── */}
-      <section id="servicios" className="py-20 bg-slate-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <h2 className="font-[Outfit,sans-serif] font-700 text-3xl sm:text-4xl text-slate-900 mb-3">Nuestros servicios</h2>
-            <p className="text-slate-500 text-lg max-w-xl mx-auto">Soluciones completas para mantener tu ambiente fresco y cómodo.</p>
+{/* ── SERVICIOS ── */}
+      <section id="servicios" className="bg-[#f7fbff] py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto mb-12 max-w-2xl text-center">
+            <span className="text-xs font-800 uppercase tracking-[.22em] text-brand-600">Nuestras soluciones</span>
+            <h2 className="mt-3 font-[Outfit,sans-serif] text-3xl font-800 tracking-tight text-[#0f2744] sm:text-4xl">
+              Ingeniería aplicada a tu confort
+            </h2>
+            <p className="mt-4 text-slate-600">
+              Servicio técnico especializado para hogares, comercios y proyectos que requieren soluciones confiables.
+            </p>
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-6">
+          <div className="grid gap-6 md:grid-cols-3">
             {[
               {
-                icon: <IconSnowflake size={28} className="text-brand-500" />,
-                title: "Instalación",
-                desc: "Instalamos todo tipo de equipos — split, inverter, ventana y central — con materiales de primera calidad y garantía en mano de obra.",
-                price: "Desde RD$3,500",
-                color: "brand",
+                icon: <IconSnowflake size={25} />,
+                title: "Climatización",
+                desc: "Instalación de equipos split, inverter, ventana y sistemas comerciales con terminación profesional.",
+                accent: "bg-brand-500",
               },
               {
-                icon: <IconWrench size={28} className="text-accent-500" />,
+                icon: <IconWrench size={25} />,
+                title: "Servicio técnico",
+                desc: "Diagnóstico y reparación de fallas eléctricas, drenaje, refrigeración y funcionamiento general.",
+                accent: "bg-accent-500",
+              },
+              {
+                icon: <IconCheck size={25} />,
                 title: "Mantenimiento",
-                desc: "Mantenimiento preventivo para extender la vida útil de tu equipo y reducir el consumo eléctrico hasta un 30%.",
-                price: "Desde RD$1,500/unidad",
-                color: "accent",
-              },
-              {
-                icon: <IconThermometer size={28} className="text-emerald-500" />,
-                title: "Reparación",
-                desc: "Diagnóstico profesional y reparación de fallas eléctricas, de compresor, goteras, ruidos y más.",
-                price: "Desde RD$900",
-                color: "emerald",
+                desc: "Planes preventivos y correctivos orientados a prolongar la vida útil y eficiencia de tus equipos.",
+                accent: "bg-brand-700",
               },
             ].map((svc) => (
-              <div
+              <article
                 key={svc.title}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300 group"
+                className="group rounded-[28px] border border-slate-100 bg-white p-7 shadow-[0_12px_35px_rgba(15,39,68,.06)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_22px_55px_rgba(15,39,68,.13)]"
               >
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 ${
-                  svc.color === "brand" ? "bg-brand-50" :
-                  svc.color === "accent" ? "bg-orange-50" : "bg-emerald-50"
-                }`}>
+                <div className={`grid h-14 w-14 place-items-center rounded-2xl text-white shadow-lg ${svc.accent}`}>
                   {svc.icon}
                 </div>
-                <h3 className="font-[Outfit,sans-serif] font-700 text-xl text-slate-900 mb-2">{svc.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed mb-4">{svc.desc}</p>
-                <div className={`text-sm font-semibold ${
-                  svc.color === "brand" ? "text-brand-600" :
-                  svc.color === "accent" ? "text-accent-600" : "text-emerald-600"
-                }`}>
-                  {svc.price}
-                </div>
+                <h3 className="mt-6 font-[Outfit,sans-serif] text-xl font-800 text-[#0f2744]">{svc.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{svc.desc}</p>
                 <button
                   onClick={scrollToQuoter}
-                  className="mt-4 w-full py-2.5 rounded-xl border-2 border-slate-200 text-sm font-semibold text-slate-600 hover:border-brand-400 hover:text-brand-600 transition-all duration-200"
+                  className="mt-6 inline-flex items-center gap-2 text-sm font-800 text-brand-600 transition-all group-hover:gap-3 group-hover:text-brand-700"
                 >
-                  Solicitar cotización →
+                  Solicitar cotización <span>→</span>
                 </button>
-              </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <CatalogSection />
 
-      {/* ── COTIZADOR ── */}
+      {/* ── PRODUCTOS ── */}
+      
+      {/* ── PRODUCTOS DESDE SUPABASE ── */}
+      <section id="productos" className="scroll-mt-24 bg-white px-[5.8%] py-20">
+        <div className="mx-auto max-w-[1672px]">
+          <div className="mb-10">
+            <span className="text-[13px] font-extrabold uppercase tracking-[0.22em] text-[#168df0]">
+              Productos
+            </span>
+            <h2 className="mt-3 text-4xl font-black tracking-tight text-[#0b2a56] md:text-5xl">
+              Equipos disponibles
+            </h2>
+            <p className="mt-4 max-w-2xl text-[17px] leading-7 text-slate-600">
+              Equipos publicados en nuestro catálogo y disponibles para cotización.
+            </p>
+          </div>
+
+          {publicProductsLoading ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[0, 1, 2].map((item) => (
+                <div
+                  key={item}
+                  className="h-[390px] animate-pulse rounded-[28px] border border-slate-200 bg-slate-50"
+                />
+              ))}
+            </div>
+          ) : publicProducts.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {publicProducts.map((product) => (
+                <article
+                  key={product.id}
+                  className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_14px_40px_rgba(15,60,95,.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_55px_rgba(15,60,95,.14)]"
+                >
+                  <div className="relative flex min-h-[235px] items-center justify-center overflow-hidden bg-[#f6fbff] p-7">
+                    <img
+                      src={product.image ?? ""}
+                      alt={product.name}
+                      loading="lazy"
+                      className="h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]"
+                    />
+                  </div>
+
+                  <div className="p-6">
+                    <div className="flex flex-wrap items-center gap-2 text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#168df0]">
+                      {product.brand && <span>{product.brand}</span>}
+                      {product.category && <span>• {product.category}</span>}
+                    </div>
+
+                    <h3 className="mt-2 text-[22px] font-extrabold text-[#0b2a56]">
+                      {product.name}
+                    </h3>
+
+                    {product.btu && (
+                      <p className="mt-2 text-sm font-semibold text-slate-500">
+                        {product.btu} BTU
+                      </p>
+                    )}
+
+                    {product.description && (
+                      <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">
+                        {product.description}
+                      </p>
+                    )}
+
+                    <div className="mt-6 flex items-end justify-between gap-4">
+                      <div>
+                        {typeof product.price === "number" ? (
+                          <p className="text-[22px] font-black text-[#0b2a56]">
+                            {new Intl.NumberFormat("es-DO", {
+                              style: "currency",
+                              currency: "DOP",
+                              maximumFractionDigits: 0,
+                            }).format(product.price)}
+                          </p>
+                        ) : (
+                          <p className="font-bold text-[#0b2a56]">Consultar precio</p>
+                        )}
+
+                        {typeof product.stock === "number" && (
+                          <p className="mt-1 text-xs text-slate-500">
+                            {product.stock > 0 ? `${product.stock} disponible(s)` : "Agotado"}
+                          </p>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedProduct(product)}
+                        className="inline-flex items-center justify-center rounded-full bg-[#168df0] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#0b7edb]"
+                      >
+                        Cotizar
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
+              <h3 className="text-xl font-extrabold text-[#0b2a56]">
+                No hay productos publicados en este momento
+              </h3>
+              <p className="mt-2 text-slate-600">
+                Los equipos marcados como publicados en Supabase aparecerán aquí automáticamente.
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+
+{/* ── COTIZADOR ── */}
       <section id="cotizador" ref={quoterRef} className="py-20 bg-white">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
@@ -936,138 +1184,280 @@ export default function App() {
       <StatusLookupSection />
 
       {/* ── TESTIMONIOS ── */}
-      <section id="testimonios" className="py-20 bg-slate-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <h2 className="font-[Outfit,sans-serif] font-700 text-3xl sm:text-4xl text-slate-900 mb-3">Lo que dicen nuestros clientes</h2>
-            <p className="text-slate-500 text-lg">Más de 8 años enfriando hogares y negocios en la República Dominicana.</p>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-6">
-            {[
-              {
-                name: "Carmen Rosario",
-                zone: "Los Prados, D.N.",
-                text: "Excelente servicio. Instalaron dos split en mi apartamento en un solo día y dejaron todo limpio. El precio fue exactamente lo que cotizaron.",
-                rating: 5,
-                img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&auto=format",
-              },
-              {
-                name: "José Miguel Peña",
-                zone: "Santiago de los Caballeros",
-                text: "Le daban mantenimiento a los 4 equipos de mi negocio hace años y nunca falla. Recomendado 100%, muy puntuales y profesionales.",
-                rating: 5,
-                img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format",
-              },
-              {
-                name: "Patricia Núñez",
-                zone: "Boca Chica",
-                text: "El equipo de FrescoTech resolvió un goteo que otro técnico no pudo arreglar. Vinieron el mismo día que llamé. Muy recomendado.",
-                rating: 5,
-                img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&auto=format",
-              },
-            ].map(t => (
-              <div key={t.name} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                <div className="flex gap-1 mb-4">
-                  {Array.from({ length: t.rating }).map((_, i) => (
-                    <IconStar key={i} size={16} className="text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-slate-600 text-sm leading-relaxed mb-5">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <img src={t.img} alt={t.name} className="w-10 h-10 rounded-full object-cover bg-slate-200" />
-                  <div>
-                    <div className="font-semibold text-sm text-slate-900">{t.name}</div>
-                    <div className="text-xs text-slate-400 flex items-center gap-1">
-                      <IconMapPin size={11} /> {t.zone}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Trust badges */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-12">
-            {[
-              { emoji: "🏆", value: "8+ años", label: "De experiencia" },
-              { emoji: "❄️", value: "1,200+", label: "Unidades instaladas" },
-              { emoji: "📍", value: "15 zonas", label: "De cobertura" },
-              { emoji: "⭐", value: "4.9 / 5", label: "Calificación promedio" },
-            ].map(b => (
-              <div key={b.label} className="bg-white rounded-2xl p-5 text-center border border-slate-100 shadow-sm">
-                <div className="text-3xl mb-2">{b.emoji}</div>
-                <div className="font-[Outfit,sans-serif] font-800 text-xl text-slate-900">{b.value}</div>
-                <div className="text-xs text-slate-500 mt-1">{b.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      
 
       {/* ── FOOTER ── */}
-      <footer className="bg-brand-900 text-white pt-14 pb-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid sm:grid-cols-3 gap-10 mb-10">
-            <div>
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center">
-                  <IconSnowflake size={18} className="text-white" />
+            
+      
+      
+      
+      
+      
+      {/* NEXTER_PRODUCT_QUOTE_MODAL_UI */}
+      {selectedProduct && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-[#041f33]/70 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Cotizar ${selectedProduct.name}`}
+          onClick={() => setSelectedProduct(null)}
+        >
+          <div
+            className="max-h-[92vh] w-full max-w-[760px] overflow-y-auto rounded-[30px] bg-white shadow-[0_30px_90px_rgba(0,0,0,.30)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-7 py-6">
+              <div>
+                <span className="text-[12px] font-extrabold uppercase tracking-[0.18em] text-[#168df0]">
+                  Detalles del producto
+                </span>
+                <h3 className="mt-2 text-2xl font-black text-[#0b2a56]">
+                  {selectedProduct.name}
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedProduct(null)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl font-bold text-slate-600 transition hover:bg-slate-200"
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="grid gap-7 p-7 md:grid-cols-[260px_1fr]">
+              <div className="flex min-h-[240px] items-center justify-center rounded-[24px] bg-[#f5fbff] p-6">
+                {selectedProduct.image ? (
+                  <img
+                    src={selectedProduct.image}
+                    alt={selectedProduct.name}
+                    className="max-h-[220px] w-full object-contain"
+                  />
+                ) : (
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#e5f5ff] text-4xl">
+                    ❄
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <div className="grid gap-3 text-sm sm:grid-cols-2">
+                  {selectedProduct.brand && (
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <span className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Marca
+                      </span>
+                      <span className="mt-1 block font-bold text-[#0b2a56]">
+                        {selectedProduct.brand}
+                      </span>
+                    </div>
+                  )}
+
+                  {selectedProduct.category && (
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <span className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Categoría
+                      </span>
+                      <span className="mt-1 block font-bold text-[#0b2a56]">
+                        {selectedProduct.category}
+                      </span>
+                    </div>
+                  )}
+
+                  {selectedProduct.btu && (
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <span className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Capacidad
+                      </span>
+                      <span className="mt-1 block font-bold text-[#0b2a56]">
+                        {selectedProduct.btu} BTU
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <span className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Disponibilidad
+                    </span>
+                    <span className="mt-1 block font-bold text-[#0b2a56]">
+                      {typeof selectedProduct.stock === "number"
+                        ? selectedProduct.stock > 0
+                          ? `${selectedProduct.stock} unidad(es)`
+                          : "Agotado"
+                        : "Consultar"}
+                    </span>
+                  </div>
                 </div>
-                <span className="font-[Outfit,sans-serif] font-800 text-xl">FrescoTech <span className="text-brand-300">RD</span></span>
+
+                {selectedProduct.description && (
+                  <div className="mt-5">
+                    <h4 className="font-extrabold text-[#0b2a56]">Descripción</h4>
+                    <p className="mt-2 leading-7 text-slate-600">
+                      {selectedProduct.description}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-6 flex flex-col gap-4 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Precio
+                    </span>
+                    <p className="mt-1 text-2xl font-black text-[#0b2a56]">
+                      {typeof selectedProduct.price === "number"
+                        ? new Intl.NumberFormat("es-DO", {
+                            style: "currency",
+                            currency: "DOP",
+                            maximumFractionDigits: 0,
+                          }).format(selectedProduct.price)
+                        : "Consultar precio"}
+                    </p>
+                  </div>
+
+                  <a
+                    href={buildProductWhatsAppUrl(selectedProduct)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#25D366] px-6 py-3 font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-[#20bd5a]"
+                  >
+                    Cotizar por WhatsApp
+                  </a>
+                </div>
               </div>
-              <p className="text-brand-200 text-sm leading-relaxed mb-4">
-                Instalación y mantenimiento profesional de aires acondicionados en la República Dominicana.
+            </div>
+          </div>
+        </div>
+      )}
+
+<footer id="contacto" className="relative overflow-hidden bg-[radial-gradient(circle_at_15%_100%,rgba(14,165,233,.11),transparent_30%),linear-gradient(105deg,#062f4a_0%,#073854_54%,#062f4a_100%)] text-white">
+        {/* Subtle left-side geometry */}
+        <div className="pointer-events-none absolute -bottom-24 -left-20 h-72 w-72 rounded-full border-[48px] border-[#0ea5e9]/[0.04]" />
+
+        {/* Nexter diagonal brand accents */}
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[310px] overflow-hidden lg:block">
+          <div className="absolute -right-16 top-0 h-full w-[148px] skew-x-[-25deg] bg-[#f97316]" />
+          <div className="absolute right-[76px] top-0 h-full w-[78px] skew-x-[-25deg] bg-[#20a8df]" />
+          <div className="absolute right-[140px] top-0 h-full w-[64px] skew-x-[-25deg] bg-[#f97316]" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-[1672px] px-[5.2%] py-11 lg:py-12">
+          <div className="grid gap-10 lg:grid-cols-[1.35fr_.82fr_.92fr] lg:items-start lg:gap-0">
+            {/* Text branding: no raster logo in footer */}
+            <div className="max-w-[650px] lg:pr-16">
+              <div className="inline-flex flex-col">
+                <span className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.30em] text-[#46b8f2]">
+                  Ingeniería & climatización
+                </span>
+
+                <div className="leading-none">
+                  <span className="block text-[44px] font-black tracking-[-0.04em] text-[#168df0] sm:text-[50px]">
+                    Nexter
+                  </span>
+                  <span className="mt-1 block text-[34px] font-black tracking-[-0.035em] text-[#f97316] sm:text-[40px]">
+                    Ingeniería
+                  </span>
+                </div>
+
+                <div className="mt-5 h-[3px] w-24 rounded-full bg-gradient-to-r from-[#168df0] to-[#f97316]" />
+              </div>
+
+              <p className="mt-6 max-w-[640px] text-[16px] leading-[1.75] text-slate-300">
+                Climatización, mantenimiento, instalación y servicio técnico con
+                soluciones pensadas para mantener tus espacios y tu operación en movimiento.
               </p>
-              <div className="flex gap-3">
-                <a href="#" className="w-9 h-9 rounded-lg bg-brand-700 hover:bg-brand-600 flex items-center justify-center transition-colors">
-                  <IconFacebook size={17} />
-                </a>
-                <a href="#" className="w-9 h-9 rounded-lg bg-brand-700 hover:bg-brand-600 flex items-center justify-center transition-colors">
-                  <IconInstagram size={17} />
-                </a>
-                <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-green-600 hover:bg-green-500 flex items-center justify-center transition-colors">
-                  <IconWhatsApp size={17} />
-                </a>
+            </div>
+
+            {/* Services */}
+            <div className="lg:border-l lg:border-white/20 lg:px-14">
+              <h3 className="text-[20px] font-extrabold text-white">
+                Nuestros servicios
+              </h3>
+
+              <div className="mt-6 space-y-[14px] text-[15px] text-slate-300">
+                <div className="flex items-center gap-4">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#18a8e5]" strokeWidth="1.8">
+                    <path d="M12 2v20M4.22 6.5 19.78 17.5M19.78 6.5 4.22 17.5M7.5 4.22 16.5 19.78M16.5 4.22 7.5 19.78"/>
+                  </svg>
+                  <span>Instalación de aires</span>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#18a8e5]" strokeWidth="1.8">
+                    <path d="M14.7 6.3a4 4 0 0 0-5.65 5.65L3 18l3 3 6.05-6.05a4 4 0 0 0 5.65-5.65l-2.1 2.1-3-3 2.1-2.1Z"/>
+                  </svg>
+                  <span>Mantenimiento preventivo</span>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#18a8e5]" strokeWidth="1.8">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.17.37.39.71.66 1 .28.27.64.45 1.04.5h.1v4h-.1c-.4.05-.76.23-1.04.5-.27.29-.49.63-.66 1Z"/>
+                  </svg>
+                  <span>Reparación y diagnóstico</span>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#18a8e5]" strokeWidth="1.8">
+                    <path d="m12 2 8 4.5v11L12 22l-8-4.5v-11L12 2Z"/>
+                    <path d="m4.5 6.8 7.5 4.3 7.5-4.3M12 11.1V22"/>
+                  </svg>
+                  <span>Equipos y repuestos</span>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#18a8e5]" strokeWidth="1.8">
+                    <path d="M12 22s7-3 7-9V5l-7-3-7 3v8c0 6 7 9 7 9Z"/>
+                    <path d="m9 12 2 2 4-4"/>
+                  </svg>
+                  <span>Asesoría profesional</span>
+                </div>
               </div>
             </div>
 
-            <div>
-              <h4 className="font-[Outfit,sans-serif] font-700 text-sm uppercase tracking-wider text-brand-300 mb-4">Servicios</h4>
-              <ul className="space-y-2 text-sm text-brand-200">
-                {["Instalación de A/C", "Mantenimiento preventivo", "Reparación y diagnóstico", "Cambio de gas refrigerante", "Instalación de breakers"].map(s => (
-                  <li key={s} className="hover:text-white transition-colors cursor-pointer">{s}</li>
-                ))}
-              </ul>
-            </div>
+            {/* Contact */}
+            <div className="lg:border-l lg:border-white/20 lg:pl-14 lg:pr-24">
+              <h3 className="text-[20px] font-extrabold text-white">
+                Contáctanos
+              </h3>
 
-            <div>
-              <h4 className="font-[Outfit,sans-serif] font-700 text-sm uppercase tracking-wider text-brand-300 mb-4">Contacto</h4>
-              <ul className="space-y-3 text-sm text-brand-200">
-                <li className="flex items-center gap-2.5">
-                  <IconPhone size={15} className="text-brand-400 shrink-0" />
-                  <a href={`tel:${BUSINESS.phoneInternational}`} className="hover:text-white transition-colors">{BUSINESS.phoneDisplay}</a>
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <IconWhatsApp size={15} className="text-green-400 shrink-0" />
-                  <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">WhatsApp directo</a>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <IconMapPin size={15} className="text-brand-400 shrink-0 mt-0.5" />
-                  <span>Cobertura: {BUSINESS.coverage}</span>
-                </li>
-              </ul>
+              <div className="mt-6 space-y-[14px] text-[15px] text-slate-200">
+                <a href="tel:+18297082720" className="flex items-center gap-4 transition hover:text-white">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#39aef1]" strokeWidth="1.8">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                  <span>829-708-2720</span>
+                </a>
+
+                <a href="https://wa.me/18297082720" target="_blank" rel="noreferrer" className="flex items-center gap-4 transition hover:text-white">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#73b9eb]" strokeWidth="1.8">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M8.7 8.7c.5 3.5 3.1 6.1 6.6 6.6M8.7 8.7l1.5-.7 1.2 2.3-1 .9M15.3 15.3l.7-1.5-2.3-1.2-.9 1"/>
+                  </svg>
+                  <span>WhatsApp directo</span>
+                </a>
+
+                <a href="mailto:servicio@nexteringenieria.com" className="flex items-center gap-4 transition hover:text-white">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#39aef1]" strokeWidth="1.8">
+                    <rect x="3" y="5" width="18" height="14" rx="2"/>
+                    <path d="m3 7 9 6 9-6"/>
+                  </svg>
+                  <span>servicio@nexteringenieria.com</span>
+                </a>
+
+                <div className="flex items-center gap-4">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-none stroke-[#73b9eb]" strokeWidth="1.8">
+                    <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/>
+                    <circle cx="12" cy="10" r="2.5"/>
+                  </svg>
+                  <span>República Dominicana</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="border-t border-brand-700 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-brand-400 text-xs">© {new Date().getFullYear()} FrescoTech RD. Todos los derechos reservados.</p>
-            <button
-              onClick={scrollToQuoter}
-              className="bg-accent-500 hover:bg-accent-600 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all duration-200 active:scale-95"
-            >
-              Cotiza gratis →
-            </button>
+          <div className="mt-10 border-t border-white/20 pt-6 text-[13px] text-slate-300">
+            <p>© 2026 Nexter Ingeniería. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>

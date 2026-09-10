@@ -27,3 +27,39 @@ button:not(:disabled), a { cursor: pointer; }
 button:not(:disabled):active { transform: scale(.98); }
 img { max-width: 100%; }
 @media (max-width: 640px) { html { font-size: 15px; } }
+
+/* NEXTER_STAGE1_VISUAL */
+html { scroll-behavior: smooth; }
+body { color: #0f2744; background: #ffffff; }
+::selection { background: rgba(14,165,233,.18); color: #0f2744; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+/* NEXTER_STAGE1_EXACT */
+body { background: #ffffff; color: #0b2a56; }
+#inicio { background:
+  linear-gradient(180deg, #ffffff 0%, #ffffff 75%, #fbfdff 100%);
+}
+@media (min-width: 1024px) {
+  #inicio::before {
+    content: "";
+    position: absolute;
+    inset: 88px 0 auto 0;
+    height: 560px;
+    pointer-events: none;
+    background: linear-gradient(90deg, #ffffff 0%, rgba(255,255,255,.96) 38%, rgba(255,255,255,.1) 58%, rgba(255,255,255,0) 100%);
+    z-index: 1;
+  }
+}
+
+/* NEXTER_STAGE1_MASTER_ALIGNMENT */
+body { background: #fff; color: #0b2a56; }
+#inicio { isolation: isolate; }
+@media (min-width: 1024px) and (max-width: 1350px) {
+  #inicio h1 { font-size: 64px; }
+  #inicio p { font-size: 17px; max-width: 520px; }
+}
+@media (max-width: 1023px) {
+  #inicio { padding-top: 88px; }
+}

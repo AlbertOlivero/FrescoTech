@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220">
+<defs>
+  <linearGradient id="b" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#38bdf8"/><stop offset=".5" stop-color="#0ea5e9"/><stop offset="1" stop-color="#075985"/>
+  </linearGradient>
+  <linearGradient id="o" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fb923c"/><stop offset="1" stop-color="#f97316"/>
+  </linearGradient>
+</defs>
+<g transform="translate(14 18)">
+  <path d="M15 167V22h38l85 93V22h42v145h-37L57 74v93z" fill="url(#b)"/>
+  <path d="M54 123l42 44h48L78 96z" fill="url(#o)"/>
+  <path d="M42 102c47 20 87 11 129-32-18 52-66 85-129 62z" fill="#e0f2fe"/>
+  <path d="M54 116c39 13 75 4 114-31-20 43-61 67-114 52z" fill="#38bdf8"/>
+  <g transform="translate(155 141)"><circle r="25" fill="url(#o)"/><circle r="9" fill="#082f49"/></g>
+</g>
+<text x="220" y="104" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="72" fill="#0ea5e9">Nexter</text>
+<text x="220" y="170" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="64" fill="#f97316">Ingeniería</text>
+</svg>
